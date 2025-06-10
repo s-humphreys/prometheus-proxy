@@ -3,8 +3,8 @@ package proxy
 import (
 	"log"
 
-	"github.com/s-gh/prometheus-proxy/internal/config"
-	"github.com/s-gh/prometheus-proxy/internal/proxy"
+	"github.com/s-humphreys/prometheus-proxy/internal/config"
+	"github.com/s-humphreys/prometheus-proxy/internal/proxy"
 
 	"github.com/spf13/cobra"
 )

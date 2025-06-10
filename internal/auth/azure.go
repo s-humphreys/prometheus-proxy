@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/s-gh/prometheus-proxy/internal/logger"
+	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 )

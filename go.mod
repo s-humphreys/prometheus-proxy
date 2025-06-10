@@ -1,4 +1,4 @@
-module github.com/s-gh/prometheus-proxy
+module github.com/s-humphreys/prometheus-proxy
 
 go 1.24.3
 

@@ -4,7 +4,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/s-gh/prometheus-proxy/internal/auth"
+	"github.com/s-humphreys/prometheus-proxy/internal/auth"
 
 	"github.com/go-playground/validator"
 )

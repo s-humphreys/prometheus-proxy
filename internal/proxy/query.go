@@ -4,8 +4,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/s-gh/prometheus-proxy/internal/config"
-	"github.com/s-gh/prometheus-proxy/internal/logger"
+	"github.com/s-humphreys/prometheus-proxy/internal/config"
+	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 
 	"github.com/google/uuid"
 )

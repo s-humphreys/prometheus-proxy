@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/s-gh/prometheus-proxy/internal/logger"
+	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 )
 
 var errEmptyToken = errors.New("empty authentication token")
