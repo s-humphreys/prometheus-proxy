@@ -26,7 +26,10 @@ type AzureClient struct {
 }
 
 // Initiliases the Azure client using the provided credentials
-func (ac *AzureClient) InitClient() error {
+func (ac *AzureClient) InitClient(logger *logger.Logger) error {
+	logger.Info("using azure client for authentication", "client_id", ac.ClientId, "tenant_id", ac.TenantId)
+	ac.Logger = logger
+
 	if ac.ClientSecret == "" {
 		return errUnimplementedAzAuthMethod
 	}
@@ -60,11 +63,6 @@ func (ac *AzureClient) GetHeaders(ctx context.Context) ([]ClientHeader, error) {
 	return []ClientHeader{
 		{Key: "Authorization", Value: fmt.Sprintf("Bearer %s", token)},
 	}, nil
-}
-
-func (ac *AzureClient) SetLogger(logger *logger.Logger) {
-	logger.Info("using azure client for authentication", "client_id", ac.ClientId, "tenant_id", ac.TenantId)
-	ac.Logger = logger
 }
 
 // Creates a new confidential client for Azure authentication

@@ -15,8 +15,7 @@ type ClientHeader struct {
 }
 
 type Client interface {
-	InitClient() error
-	SetLogger(logger *logger.Logger)
+	InitClient(logger *logger.Logger) error
 	AcquireToken(ctx context.Context) (string, error)
 	GetHeaders(ctx context.Context) ([]ClientHeader, error)
 }

@@ -1,18 +1,32 @@
 package proxy
 
 import (
+	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/s-humphreys/prometheus-proxy/internal/config"
 	"github.com/s-humphreys/prometheus-proxy/internal/logger"
-
-	"github.com/google/uuid"
 )
 
-// Handles the `/api/v1/query` endpoint by forwarding requests to the upstream Prometheus server
-func queryHandler(logger *logger.Logger, conf *config.Config) {
-	http.HandleFunc("/api/v1/query", func(w http.ResponseWriter, r *http.Request) {
+// Creates an upstream URL for the Prometheus server based on the request,
+// including the path and query parameters
+func constructPrometheusUrl(logger *slog.Logger, prometheusUrl string, r *http.Request) string {
+	upstreamUrl := prometheusUrl + r.URL.Path
+	if r.URL.RawQuery != "" {
+		upstreamUrl = fmt.Sprintf("%s?%s", upstreamUrl, r.URL.RawQuery)
+	}
+	logger.Debug("constructed upstream prometheus URL", "prometheus_url", upstreamUrl)
+	return upstreamUrl
+}
+
+// Handles a request which requires authentication. Invokes the implemented clients
+// required headers, and forwards the request to the upstream Prometheus server, before
+// returning the response to the original client
+func authenticatedRequestHandler(logger *logger.Logger, conf *config.Config, pattern string) {
+	http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
 		cLog := logger.With(
 			"method", r.Method,
@@ -23,19 +37,28 @@ func queryHandler(logger *logger.Logger, conf *config.Config) {
 
 		cLog.Info("processing request")
 
-		if r.Method != http.MethodGet {
-			cLog.Error("invalid request method")
-			http.Error(w, errForbiddenMethod.Error(), http.StatusForbidden)
-			return
+		ctx := r.Context()
+		promUrl := constructPrometheusUrl(cLog, conf.PrometheusUrl, r)
+
+		// Copy body if the request method is POST
+		var body io.Reader
+		if r.Method == http.MethodPost {
+			cLog.Debug("copying request body for POST method")
+			body = r.Body
 		}
 
-		ctx := r.Context()
-		promUrl := constructPrometheusUrl(conf.PrometheusUrl, r)
-		req, err := http.NewRequestWithContext(ctx, "GET", promUrl, nil)
+		req, err := http.NewRequestWithContext(ctx, r.Method, promUrl, body)
 		if err != nil {
 			cLog.Error("failed to create upstream request", "error", err)
 			http.Error(w, "failed to create upstream request: "+err.Error(), http.StatusInternalServerError)
 			return
+		}
+
+		// Copy headers from the original request to the new request
+		for key, values := range r.Header {
+			for _, value := range values {
+				req.Header.Add(key, value)
+			}
 		}
 
 		// Add required auth client headers to request

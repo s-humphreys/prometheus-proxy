@@ -12,26 +12,30 @@ import (
 
 var errForbiddenMethod = errors.New("forbidden request method")
 
-// Creates an upstream URL for the Prometheus server based on the request,
-// including the path and query parameters
-func constructPrometheusUrl(prometheusUrl string, r *http.Request) string {
-	upstreamUrl := prometheusUrl + r.URL.Path
-	if r.URL.RawQuery != "" {
-		upstreamUrl = fmt.Sprintf("%s?%s", upstreamUrl, r.URL.RawQuery)
-	}
-	return upstreamUrl
-}
-
 // Run starts the HTTP server and listens for incoming requests
 func Run(c *config.Config) {
 	l, err := logger.New(c.LogLevel)
 	if err != nil {
 		log.Fatalf("failed to create logger: %v", err)
 	}
-	c.Client.SetLogger(l)
-	c.Client.InitClient()
 
-	queryHandler(l, c)
+	c.Client.InitClient(l)
+
+	runtimeInfo := newRuntimeInfoData()
+
+	// Setup handlers for routes
+	healthRequestHandler(l)
+	statusConfigRequestHandler(l)
+	statusBuildRequestHandler(l, runtimeInfo)
+	authenticatedRequestHandler(l, c, "/api/v1/query")
+	authenticatedRequestHandler(l, c, "/api/v1/query_range")
+	authenticatedRequestHandler(l, c, "/api/v1/format_query")
+	authenticatedRequestHandler(l, c, "/api/v1/parse_query")
+	authenticatedRequestHandler(l, c, "/api/v1/series")
+	authenticatedRequestHandler(l, c, "/api/v1/labels")
+	authenticatedRequestHandler(l, c, "/api/v1/metadata")
+	authenticatedRequestHandler(l, c, "/api/v1/status/flags")     // TODO: Implement dummy handler like runtimeinfo
+	authenticatedRequestHandler(l, c, "/api/v1/status/buildinfo") // TODO: Implement dummy handler like runtimeinfo
 
 	addr := fmt.Sprintf(":%d", c.Port)
 	l.Info("starting prometheus proxy", "listening", addr, "port", c.Port)

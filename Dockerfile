@@ -19,4 +19,4 @@ RUN apt-get update && \
 
 COPY --from=builder /prometheus-proxy /prometheus-proxy
 
-ENTRYPOINT ["/prometheus-proxy"]
+ENTRYPOINT ["/prometheus-proxy", "run"]
