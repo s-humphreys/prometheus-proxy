@@ -11,7 +11,21 @@ import (
 	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 )
 
-type RuntimeInfoData struct {
+type mockStatusResponse struct {
+	Status string      `json:"status"`
+	Data   interface{} `json:"data"`
+}
+
+type buildInfoData struct {
+	Version   string `json:"version"`
+	Revision  string `json:"revision"`
+	Branch    string `json:"branch"`
+	BuildUser string `json:"buildUser"`
+	BuildDate string `json:"buildDate"`
+	GoVersion string `json:"goVersion"`
+}
+
+type runtimeInfoData struct {
 	StartTime           string `json:"startTime"`
 	CWD                 string `json:"CWD"`
 	ReloadConfigSuccess bool   `json:"reloadConfigSuccess"`
@@ -25,19 +39,22 @@ type RuntimeInfoData struct {
 	StorageRetention    string `json:"storageRetention"`
 }
 
-type RuntimeInfoResponse struct {
-	Status string           `json:"status"`
-	Data   *RuntimeInfoData `json:"data"`
-}
-
-func (r *RuntimeInfoData) update() {
+func (r *runtimeInfoData) update() {
 	ts := time.Now().UTC().Format(time.RFC3339Nano)
 	r.StartTime = ts
 	r.LastConfigTime = ts
 }
 
-func newRuntimeInfoData() *RuntimeInfoData {
-	return &RuntimeInfoData{
+func newbuildInfoData() *buildInfoData {
+	return &buildInfoData{
+		Version:   "3.4.1",
+		GoVersion: runtime.Version(),
+		BuildDate: time.Now().UTC().Format("20060102-15:04:05"),
+	}
+}
+
+func newruntimeInfoData() *runtimeInfoData {
+	return &runtimeInfoData{
 		CWD:                 "/",
 		ReloadConfigSuccess: true,
 		CorruptionCount:     0,
@@ -50,16 +67,23 @@ func newRuntimeInfoData() *RuntimeInfoData {
 	}
 }
 
-func newRuntimeInfoResponse(runtimeInfo *RuntimeInfoData) *RuntimeInfoResponse {
+func newBuildInfoResponse(buildInfo *buildInfoData) *mockStatusResponse {
+	return &mockStatusResponse{
+		Status: "success",
+		Data:   buildInfo,
+	}
+}
+
+func newRuntimeInfoResponse(runtimeInfo *runtimeInfoData) *mockStatusResponse {
 	runtimeInfo.update()
-	return &RuntimeInfoResponse{
+	return &mockStatusResponse{
 		Status: "success",
 		Data:   runtimeInfo,
 	}
 }
 
-// Implements a status endpoint that returns the configuration status of the proxy
-func statusConfigRequestHandler(logger *logger.Logger) {
+// Implements a mock status endpoint that returns the configuration status of the proxy
+func mockStatusConfigHandler(logger *logger.Logger) {
 	http.HandleFunc("/api/v1/status/config", func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
 		cLog := logger.With(
@@ -89,8 +113,8 @@ func statusConfigRequestHandler(logger *logger.Logger) {
 	})
 }
 
-// Implements a status endpoint that returns dummy Prometheus runtime information
-func statusBuildRequestHandler(logger *logger.Logger, runtimeInfo *RuntimeInfoData) {
+// Implements a mock status endpoint that returns dummy Prometheus runtime information
+func mockStatusRuntimeInfoHandler(logger *logger.Logger, runtimeInfo *runtimeInfoData) {
 	http.HandleFunc("/api/v1/status/runtimeinfo", func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
 		cLog := logger.With(
@@ -109,6 +133,37 @@ func statusBuildRequestHandler(logger *logger.Logger, runtimeInfo *RuntimeInfoDa
 		}
 
 		response := newRuntimeInfoResponse(runtimeInfo)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			cLog.Error("failed to encode runtime info response", "error", err)
+		}
+
+		cLog.Info("request completed", "status_code", http.StatusOK)
+	})
+}
+
+// Implements a mock status endpoint that returns dummy Prometheus buildtime information
+func mockStatusBuildInfoHandler(logger *logger.Logger, buildInfo *buildInfoData) {
+	http.HandleFunc("/api/v1/status/buildinfo", func(w http.ResponseWriter, r *http.Request) {
+		requestId := uuid.New().String()
+		cLog := logger.With(
+			"method", r.Method,
+			"url", r.URL.String(),
+			"request_id", requestId,
+			"remote_addr", r.RemoteAddr,
+		)
+
+		cLog.Info("processing request")
+
+		if r.Method != http.MethodGet {
+			cLog.Error("invalid request method")
+			http.Error(w, errForbiddenMethod.Error(), http.StatusForbidden)
+			return
+		}
+
+		response := newBuildInfoResponse(buildInfo)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

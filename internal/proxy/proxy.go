@@ -21,12 +21,14 @@ func Run(c *config.Config) {
 
 	c.Client.InitClient(l)
 
-	runtimeInfo := newRuntimeInfoData()
+	runtimeInfo := newruntimeInfoData()
+	buildInfo := newbuildInfoData()
 
 	// Setup handlers for routes
 	healthRequestHandler(l)
-	statusConfigRequestHandler(l)
-	statusBuildRequestHandler(l, runtimeInfo)
+	mockStatusConfigHandler(l)
+	mockStatusRuntimeInfoHandler(l, runtimeInfo)
+	mockStatusBuildInfoHandler(l, buildInfo)
 	authenticatedRequestHandler(l, c, "/api/v1/query")
 	authenticatedRequestHandler(l, c, "/api/v1/query_range")
 	authenticatedRequestHandler(l, c, "/api/v1/format_query")
@@ -34,8 +36,7 @@ func Run(c *config.Config) {
 	authenticatedRequestHandler(l, c, "/api/v1/series")
 	authenticatedRequestHandler(l, c, "/api/v1/labels")
 	authenticatedRequestHandler(l, c, "/api/v1/metadata")
-	authenticatedRequestHandler(l, c, "/api/v1/status/flags")     // TODO: Implement dummy handler like runtimeinfo
-	authenticatedRequestHandler(l, c, "/api/v1/status/buildinfo") // TODO: Implement dummy handler like runtimeinfo
+	authenticatedRequestHandler(l, c, "/api/v1/status/flags") // TODO: Implement mock handler like runtimeinfo
 
 	addr := fmt.Sprintf(":%d", c.Port)
 	l.Info("starting prometheus proxy", "listening", addr, "port", c.Port)

@@ -98,6 +98,10 @@ func getConfidentialClientToken(client *AzureClient, ctx context.Context) (strin
 	scopes := []string{"https://prometheus.monitor.azure.com/.default"}
 	result, err := client.confClient.AcquireTokenSilent(ctx, scopes)
 
+	if result.AccessToken != "" {
+		cLog.Debug("acquired azure token using cache/refresh")
+	}
+
 	if err != nil {
 		cLog.Warn("failed acquire azure cache/refresh token, proceeding to acquire a new token", "error", err)
 		result, err = client.confClient.AcquireTokenByCredential(ctx, scopes)
