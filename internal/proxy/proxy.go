@@ -19,7 +19,10 @@ func Run(c *config.Config) {
 		log.Fatalf("failed to create logger: %v", err)
 	}
 
-	c.Client.InitClient(l)
+	err = c.Client.InitClient(l)
+	if err != nil {
+		log.Fatalf("failed to initialize authentication client: %v", err)
+	}
 
 	runtimeInfo := newruntimeInfoData()
 	buildInfo := newbuildInfoData()

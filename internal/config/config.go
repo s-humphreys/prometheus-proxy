@@ -13,7 +13,7 @@ type EnvConfig struct {
 	PrometheusUrl     string `env:"PROMETHEUS_URL" validate:"required"`
 	AzureTenantId     string `env:"AZURE_TENANT_ID" validate:"required"`
 	AzureClientId     string `env:"AZURE_CLIENT_ID" validate:"required"`
-	AzureClientSecret string `env:"AZURE_CLIENT_SECRET" validate:"required"`
+	AzureClientSecret string `env:"AZURE_CLIENT_SECRET"`
 }
 
 type Config struct {
