@@ -86,17 +86,17 @@ func newRuntimeInfoResponse(runtimeInfo *runtimeInfoData) *mockStatusResponse {
 func mockStatusConfigHandler(logger *logger.Logger) {
 	http.HandleFunc("/api/v1/status/config", func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
-		cLog := logger.With(
+		l := logger.With(
 			"method", r.Method,
 			"url", r.URL.String(),
 			"request_id", requestId,
 			"remote_addr", r.RemoteAddr,
 		)
 
-		cLog.Info("processing request")
+		l.Info("processing request")
 
 		if r.Method != http.MethodGet {
-			cLog.Error("invalid request method")
+			l.Error("invalid request method")
 			http.Error(w, errForbiddenMethod.Error(), http.StatusForbidden)
 			return
 		}
@@ -109,7 +109,7 @@ func mockStatusConfigHandler(logger *logger.Logger) {
 			},
 		})
 
-		cLog.Info("request completed", "status_code", http.StatusOK)
+		l.Info("request completed", "status_code", http.StatusOK)
 	})
 }
 
@@ -117,17 +117,17 @@ func mockStatusConfigHandler(logger *logger.Logger) {
 func mockStatusRuntimeInfoHandler(logger *logger.Logger, runtimeInfo *runtimeInfoData) {
 	http.HandleFunc("/api/v1/status/runtimeinfo", func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
-		cLog := logger.With(
+		l := logger.With(
 			"method", r.Method,
 			"url", r.URL.String(),
 			"request_id", requestId,
 			"remote_addr", r.RemoteAddr,
 		)
 
-		cLog.Info("processing request")
+		l.Info("processing request")
 
 		if r.Method != http.MethodGet {
-			cLog.Error("invalid request method")
+			l.Error("invalid request method")
 			http.Error(w, errForbiddenMethod.Error(), http.StatusForbidden)
 			return
 		}
@@ -137,10 +137,10 @@ func mockStatusRuntimeInfoHandler(logger *logger.Logger, runtimeInfo *runtimeInf
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(response); err != nil {
-			cLog.Error("failed to encode runtime info response", "error", err)
+			l.Error("failed to encode runtime info response", "error", err)
 		}
 
-		cLog.Info("request completed", "status_code", http.StatusOK)
+		l.Info("request completed", "status_code", http.StatusOK)
 	})
 }
 
@@ -148,17 +148,17 @@ func mockStatusRuntimeInfoHandler(logger *logger.Logger, runtimeInfo *runtimeInf
 func mockStatusBuildInfoHandler(logger *logger.Logger, buildInfo *buildInfoData) {
 	http.HandleFunc("/api/v1/status/buildinfo", func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
-		cLog := logger.With(
+		l := logger.With(
 			"method", r.Method,
 			"url", r.URL.String(),
 			"request_id", requestId,
 			"remote_addr", r.RemoteAddr,
 		)
 
-		cLog.Info("processing request")
+		l.Info("processing request")
 
 		if r.Method != http.MethodGet {
-			cLog.Error("invalid request method")
+			l.Error("invalid request method")
 			http.Error(w, errForbiddenMethod.Error(), http.StatusForbidden)
 			return
 		}
@@ -168,9 +168,9 @@ func mockStatusBuildInfoHandler(logger *logger.Logger, buildInfo *buildInfoData)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(response); err != nil {
-			cLog.Error("failed to encode runtime info response", "error", err)
+			l.Error("failed to encode runtime info response", "error", err)
 		}
 
-		cLog.Info("request completed", "status_code", http.StatusOK)
+		l.Info("request completed", "status_code", http.StatusOK)
 	})
 }

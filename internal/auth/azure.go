@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 
@@ -14,6 +15,7 @@ import (
 
 var (
 	errClientNotInitialised = errors.New("azure client not initialized")
+	errUnsetClientId        = errors.New("environment variable AZURE_CLIENT_ID is unset")
 
 	azureScopes                    = []string{"https://prometheus.monitor.azure.com/.default"}
 	azureTenantPrefix              = "https://login.microsoftonline.com/"
@@ -79,6 +81,26 @@ func (ac *AzureClient) GetHeaders(ctx context.Context) ([]ClientHeader, error) {
 	}, nil
 }
 
+// Updates the Azure Client ID in case Azure does not set the value automatically before first use
+func (ac *AzureClient) refreshClientId() error {
+	clientId := os.Getenv("AZURE_CLIENT_ID")
+	if ok := validateClientId(clientId); !ok {
+		ac.Logger.Error("AZURE_CLIENT_ID environment variable is unset", "client_id", clientId)
+		return errUnsetClientId
+	}
+
+	ac.ClientId = clientId
+	return nil
+}
+
+// Validates the Azure Client ID is set and not empty
+func validateClientId(clientId string) bool {
+	if clientId == "" || clientId == "<no value>" {
+		return false
+	}
+	return true
+}
+
 // Creates a new confidential client for Azure authentication
 // this ensures token acquisition uses cache and refresh tokens
 func newConfidentialClient(client *AzureClient) (*confidential.Client, error) {
@@ -101,6 +123,14 @@ func newConfidentialClient(client *AzureClient) (*confidential.Client, error) {
 // this ensures token acquisition uses cache and refresh tokens
 func newWorkloadIdentityCred(client *AzureClient) (*azidentity.WorkloadIdentityCredential, error) {
 	client.Logger.Debug("creating new workload identity credential", "client_id", client.ClientId, "tenant_id", client.TenantId)
+
+	if ok := validateClientId(client.ClientId); !ok {
+		err := client.refreshClientId()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	cred, err := azidentity.NewWorkloadIdentityCredential(&azidentity.WorkloadIdentityCredentialOptions{
 		ClientID:      client.ClientId,
 		TenantID:      client.TenantId,
@@ -115,57 +145,54 @@ func newWorkloadIdentityCred(client *AzureClient) (*azidentity.WorkloadIdentityC
 
 // Uses an App Registration to source a token from Azure AD
 func getConfidentialClientToken(client *AzureClient, ctx context.Context) (string, error) {
-	cLog := client.Logger.With(
+	l := client.Logger.With(
 		"client_id", client.ClientId,
 		"tenant_id", client.TenantId,
 	)
 
-	cLog.Debug("acquiring azure token using app registration credentials")
-
+	l.Debug("acquiring azure token using app registration credentials")
 	result, err := client.confClient.AcquireTokenSilent(ctx, azureScopes)
-
 	if result.AccessToken != "" {
-		cLog.Debug("acquired azure token using cache/refresh")
+		l.Debug("acquired azure token using cache/refresh")
 	}
 
 	if err != nil {
-		cLog.Warn("failed acquire azure cache/refresh token, proceeding to acquire a new token", "error", err)
+		l.Warn("failed to acquire azure cache/refresh token, proceeding to acquire a new token", "error", err)
 		result, err = client.confClient.AcquireTokenByCredential(ctx, azureScopes)
 		if err != nil {
-			cLog.Error("failed to acquire azure token", "error", err)
+			l.Error("failed to acquire azure token", "error", err)
 			return "", err
 		}
 	}
 
 	if result.AccessToken == "" {
-		cLog.Error("acquired empty azure token")
+		l.Error("acquired empty azure token")
 		return "", errEmptyToken
 	}
 
-	cLog.Debug("acquired azure token successfully")
+	l.Debug("acquired azure token successfully")
 	return result.AccessToken, nil
 }
 
 // Uses a Managed Identity to source a token from Azure AD
 func getWorkloadIdentityToken(client *AzureClient, ctx context.Context) (string, error) {
-	cLog := client.Logger.With(
+	l := client.Logger.With(
 		"client_id", client.ClientId,
 		"tenant_id", client.TenantId,
 	)
 
-	cLog.Debug("acquiring azure token using workload identity credentials")
-
+	l.Debug("acquiring azure token using workload identity credentials")
 	token, err := client.workloadIdentityCred.GetToken(ctx, policy.TokenRequestOptions{Scopes: azureScopes})
 	if err != nil {
-		cLog.Error("failed to acquire azure token", "error", err)
+		l.Error("failed to acquire azure token", "error", err)
 		return "", err
 	}
 
 	if token.Token == "" {
-		cLog.Error("acquired empty azure token")
+		l.Error("acquired empty azure token")
 		return "", errEmptyToken
 	}
 
-	cLog.Debug("acquired azure token successfully")
+	l.Debug("acquired azure token successfully")
 	return token.Token, nil
 }

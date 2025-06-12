@@ -28,28 +28,28 @@ func constructPrometheusUrl(logger *slog.Logger, prometheusUrl string, r *http.R
 func authenticatedRequestHandler(logger *logger.Logger, conf *config.Config, pattern string) {
 	http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
-		cLog := logger.With(
+		l := logger.With(
 			"method", r.Method,
 			"url", r.URL.String(),
 			"request_id", requestId,
 			"remote_addr", r.RemoteAddr,
 		)
 
-		cLog.Info("processing request")
+		l.Info("processing request")
 
 		ctx := r.Context()
-		promUrl := constructPrometheusUrl(cLog, conf.PrometheusUrl, r)
+		promUrl := constructPrometheusUrl(l, conf.PrometheusUrl, r)
 
 		// Copy body if the request method is POST
 		var body io.Reader
 		if r.Method == http.MethodPost {
-			cLog.Debug("copying request body for POST method")
+			l.Debug("copying request body for POST method")
 			body = r.Body
 		}
 
 		req, err := http.NewRequestWithContext(ctx, r.Method, promUrl, body)
 		if err != nil {
-			cLog.Error("failed to create upstream request", "error", err)
+			l.Error("failed to create upstream request", "error", err)
 			http.Error(w, "failed to create upstream request: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -64,7 +64,7 @@ func authenticatedRequestHandler(logger *logger.Logger, conf *config.Config, pat
 		// Add required auth client headers to request
 		headers, err := conf.Client.GetHeaders(ctx)
 		if err != nil {
-			cLog.Error("failed to create client headers", "error", err)
+			l.Error("failed to create client headers", "error", err)
 			http.Error(w, "failed to create client headers: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -75,7 +75,7 @@ func authenticatedRequestHandler(logger *logger.Logger, conf *config.Config, pat
 		// Make the request to the upstream Prometheus server
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			cLog.Error("failed to call upstream", "status_code", resp.StatusCode, "error", err)
+			l.Error("failed to call upstream", "status_code", resp.StatusCode, "error", err)
 			http.Error(w, "failed to call upstream: "+err.Error(), resp.StatusCode)
 			return
 		}
@@ -91,9 +91,9 @@ func authenticatedRequestHandler(logger *logger.Logger, conf *config.Config, pat
 
 		_, err = io.Copy(w, resp.Body)
 		if err != nil {
-			cLog.Error("failed to copy response body", "error", err)
+			l.Error("failed to copy response body", "error", err)
 		}
 
-		cLog.Info("request completed", "status_code", resp.StatusCode)
+		l.Info("request completed", "status_code", resp.StatusCode)
 	})
 }
