@@ -15,6 +15,7 @@ type EnvConfig struct {
 	AzureTenantId     string `env:"AZURE_TENANT_ID" validate:"required"`
 	AzureClientId     string `env:"AZURE_CLIENT_ID" validate:"required"`
 	AzureClientSecret string `env:"AZURE_CLIENT_SECRET"`
+	LogLevel          string `env:"LOG_LEVEL"`
 }
 
 type Config struct {
@@ -38,11 +39,6 @@ func LoadConfig() (*Config, error) {
 		}
 	}
 
-	logLevel := os.Getenv("LOG_LEVEL")
-	if logLevel == "" {
-		logLevel = "INFO"
-	}
-
 	ec := &EnvConfig{}
 	if err := env.Parse(ec); err != nil {
 		return nil, err
@@ -53,10 +49,14 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
+	if ec.LogLevel == "" {
+		ec.LogLevel = "INFO"
+	}
+
 	return &Config{
 		env:           ec,
 		PrometheusUrl: ec.PrometheusUrl,
-		LogLevel:      logLevel,
+		LogLevel:      ec.LogLevel,
 		Port:          port,
 		Client: &auth.AzureClient{
 			TenantId:     ec.AzureTenantId,
