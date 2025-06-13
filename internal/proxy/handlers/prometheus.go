@@ -70,6 +70,11 @@ func PrometheusRequestHandler(logger *logger.Logger, conf *config.Config, patter
 				return
 			}
 
+			if len(requestBodyBytes) == 0 && r.URL.RawQuery != "" {
+				l.Debug("got request with empty body and URL query parameters, using URL query as body.", "query", r.URL.RawQuery)
+				requestBodyBytes = []byte(r.URL.RawQuery)
+			}
+
 			l.Debug("copying request body for POST method")
 			bodyForUpstream = bytes.NewBuffer(requestBodyBytes)
 		}
