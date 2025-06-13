@@ -98,7 +98,7 @@ func PrometheusRequestHandler(logger *logger.Logger, conf *config.Config, patter
 
 		l.Debug("forwarding request to upstream prometheus",
 			"url", promUrl,
-			"method", r.Method,
+			"method", req.Method,
 			"headers", redactedHeaders(req.Header),
 			"body", string(requestBodyBytes),
 		)
