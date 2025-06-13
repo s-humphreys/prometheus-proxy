@@ -1,16 +1,14 @@
 package proxy
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/s-humphreys/prometheus-proxy/internal/config"
 	"github.com/s-humphreys/prometheus-proxy/internal/logger"
+	"github.com/s-humphreys/prometheus-proxy/internal/proxy/handlers"
 )
-
-var errForbiddenMethod = errors.New("forbidden request method")
 
 // Run starts the HTTP server and listens for incoming requests
 func Run(c *config.Config) {
@@ -24,22 +22,22 @@ func Run(c *config.Config) {
 		log.Fatalf("failed to initialize authentication client: %v", err)
 	}
 
-	runtimeInfo := newruntimeInfoData()
-	buildInfo := newbuildInfoData()
+	runtimeInfo := handlers.NewRuntimeInfoData()
+	buildInfo := handlers.NewBuildInfoData()
 
 	// Setup handlers for routes
-	healthRequestHandler(l)
-	mockStatusConfigHandler(l)
-	mockStatusRuntimeInfoHandler(l, runtimeInfo)
-	mockStatusBuildInfoHandler(l, buildInfo)
-	authenticatedRequestHandler(l, c, "/api/v1/query")
-	authenticatedRequestHandler(l, c, "/api/v1/query_range")
-	authenticatedRequestHandler(l, c, "/api/v1/format_query")
-	authenticatedRequestHandler(l, c, "/api/v1/parse_query")
-	authenticatedRequestHandler(l, c, "/api/v1/series")
-	authenticatedRequestHandler(l, c, "/api/v1/labels")
-	authenticatedRequestHandler(l, c, "/api/v1/metadata")
-	authenticatedRequestHandler(l, c, "/api/v1/status/flags") // TODO: Implement mock handler like runtimeinfo
+	handlers.HealthRequestHandler(l)
+	handlers.MockStatusConfigHandler(l)
+	handlers.MockStatusRuntimeInfoHandler(l, runtimeInfo)
+	handlers.MockStatusBuildInfoHandler(l, buildInfo)
+	handlers.PrometheusRequestHandler(l, c, "/api/v1/query")
+	handlers.PrometheusRequestHandler(l, c, "/api/v1/query_range")
+	handlers.PrometheusRequestHandler(l, c, "/api/v1/format_query")
+	handlers.PrometheusRequestHandler(l, c, "/api/v1/parse_query")
+	handlers.PrometheusRequestHandler(l, c, "/api/v1/series")
+	handlers.PrometheusRequestHandler(l, c, "/api/v1/labels")
+	handlers.PrometheusRequestHandler(l, c, "/api/v1/metadata")
+	handlers.PrometheusRequestHandler(l, c, "/api/v1/status/flags") // TODO: Implement mock handler like runtimeinfo
 
 	addr := fmt.Sprintf(":%d", c.Port)
 	l.Info("starting prometheus proxy", "listening", addr, "port", c.Port)
