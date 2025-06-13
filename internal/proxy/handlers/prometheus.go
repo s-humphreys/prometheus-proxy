@@ -111,8 +111,8 @@ func PrometheusRequestHandler(logger *logger.Logger, conf *config.Config, patter
 		// Make the request to the upstream Prometheus server
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			l.Error("failed to call upstream", "status_code", resp.StatusCode, "error", err)
-			http.Error(w, "failed to call upstream: "+err.Error(), resp.StatusCode)
+			l.Error("failed to call upstream", "error", err)
+			http.Error(w, "failed to call upstream: "+err.Error(), http.StatusBadGateway)
 			return
 		}
 		defer resp.Body.Close()
