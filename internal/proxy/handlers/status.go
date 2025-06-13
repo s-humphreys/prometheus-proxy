@@ -1,7 +1,8 @@
-package proxy
+package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"runtime"
@@ -10,6 +11,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 )
+
+var errForbiddenMethod = errors.New("forbidden request method")
 
 type mockStatusResponse struct {
 	Status string      `json:"status"`
@@ -45,7 +48,7 @@ func (r *runtimeInfoData) update() {
 	r.LastConfigTime = ts
 }
 
-func newbuildInfoData() *buildInfoData {
+func NewBuildInfoData() *buildInfoData {
 	return &buildInfoData{
 		Version:   "3.4.1",
 		GoVersion: runtime.Version(),
@@ -53,7 +56,7 @@ func newbuildInfoData() *buildInfoData {
 	}
 }
 
-func newruntimeInfoData() *runtimeInfoData {
+func NewRuntimeInfoData() *runtimeInfoData {
 	return &runtimeInfoData{
 		CWD:                 "/",
 		ReloadConfigSuccess: true,
@@ -83,7 +86,7 @@ func newRuntimeInfoResponse(runtimeInfo *runtimeInfoData) *mockStatusResponse {
 }
 
 // Implements a mock status endpoint that returns the configuration status of the proxy
-func mockStatusConfigHandler(logger *logger.Logger) {
+func MockStatusConfigHandler(logger *logger.Logger) {
 	http.HandleFunc("/api/v1/status/config", func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
 		l := logger.With(
@@ -114,7 +117,7 @@ func mockStatusConfigHandler(logger *logger.Logger) {
 }
 
 // Implements a mock status endpoint that returns dummy Prometheus runtime information
-func mockStatusRuntimeInfoHandler(logger *logger.Logger, runtimeInfo *runtimeInfoData) {
+func MockStatusRuntimeInfoHandler(logger *logger.Logger, runtimeInfo *runtimeInfoData) {
 	http.HandleFunc("/api/v1/status/runtimeinfo", func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
 		l := logger.With(
@@ -145,7 +148,7 @@ func mockStatusRuntimeInfoHandler(logger *logger.Logger, runtimeInfo *runtimeInf
 }
 
 // Implements a mock status endpoint that returns dummy Prometheus buildtime information
-func mockStatusBuildInfoHandler(logger *logger.Logger, buildInfo *buildInfoData) {
+func MockStatusBuildInfoHandler(logger *logger.Logger, buildInfo *buildInfoData) {
 	http.HandleFunc("/api/v1/status/buildinfo", func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
 		l := logger.With(

@@ -1,4 +1,4 @@
-package proxy
+package handlers
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ func constructPrometheusUrl(logger *slog.Logger, prometheusUrl string, r *http.R
 // Handles a request which requires authentication. Invokes the implemented clients
 // required headers, and forwards the request to the upstream Prometheus server, before
 // returning the response to the original client
-func authenticatedRequestHandler(logger *logger.Logger, conf *config.Config, pattern string) {
+func PrometheusRequestHandler(logger *logger.Logger, conf *config.Config, pattern string) {
 	http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.New().String()
 		l := logger.With(

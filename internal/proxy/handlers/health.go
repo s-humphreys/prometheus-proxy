@@ -1,4 +1,4 @@
-package proxy
+package handlers
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 )
 
 // Implements a health check endpoint that returns a simple JSON response
-func healthRequestHandler(appLogger *logger.Logger) {
+func HealthRequestHandler(appLogger *logger.Logger) {
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		requestID := uuid.New().String()
 		l := appLogger.With(
