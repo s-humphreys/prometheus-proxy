@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log/slog"
@@ -15,11 +16,26 @@ import (
 // including the path and query parameters
 func constructPrometheusUrl(logger *slog.Logger, prometheusUrl string, r *http.Request) string {
 	upstreamUrl := prometheusUrl + r.URL.Path
-	if r.URL.RawQuery != "" {
+	if r.Method == http.MethodGet && r.URL.RawQuery != "" {
 		upstreamUrl = fmt.Sprintf("%s?%s", upstreamUrl, r.URL.RawQuery)
 	}
 	logger.Debug("constructed upstream prometheus URL", "prometheus_url", upstreamUrl)
 	return upstreamUrl
+}
+
+// Returns a copy of the provided HTTP headers with sensitive information removed
+func redactedHeaders(header http.Header) http.Header {
+	filteredHeader := make(http.Header)
+
+	for k, v := range header {
+		if k == "Authorization" || k == "Cookie" {
+			filteredHeader.Set(k, "[REDACTED]")
+		} else {
+			filteredHeader[k] = v
+		}
+	}
+
+	return filteredHeader
 }
 
 // Handles a request which requires authentication. Invokes the implemented clients
@@ -27,6 +43,8 @@ func constructPrometheusUrl(logger *slog.Logger, prometheusUrl string, r *http.R
 // returning the response to the original client
 func PrometheusRequestHandler(logger *logger.Logger, conf *config.Config, pattern string) {
 	http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
 		requestId := uuid.New().String()
 		l := logger.With(
 			"method", r.Method,
@@ -36,29 +54,35 @@ func PrometheusRequestHandler(logger *logger.Logger, conf *config.Config, patter
 		)
 
 		l.Info("processing request")
-
 		ctx := r.Context()
 		promUrl := constructPrometheusUrl(l, conf.PrometheusUrl, r)
 
-		// Copy body if the request method is POST
-		var body io.Reader
+		// Copy body if the request method is POST & store for logging/forwarding
+		var bodyForUpstream io.Reader
+		var requestBodyBytes []byte
+
 		if r.Method == http.MethodPost {
+			var errReadBody error
+			requestBodyBytes, errReadBody = io.ReadAll(r.Body)
+			if errReadBody != nil {
+				l.Error("failed to read request body for logging", "error", errReadBody)
+				http.Error(w, "failed to read request body: "+errReadBody.Error(), http.StatusInternalServerError)
+				return
+			}
+
 			l.Debug("copying request body for POST method")
-			body = r.Body
+			bodyForUpstream = bytes.NewBuffer(requestBodyBytes)
 		}
 
-		req, err := http.NewRequestWithContext(ctx, r.Method, promUrl, body)
+		req, err := http.NewRequestWithContext(ctx, r.Method, promUrl, bodyForUpstream)
 		if err != nil {
 			l.Error("failed to create upstream request", "error", err)
 			http.Error(w, "failed to create upstream request: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Copy headers from the original request to the new request
-		for key, values := range r.Header {
-			for _, value := range values {
-				req.Header.Add(key, value)
-			}
+		if r.Method == http.MethodPost && bodyForUpstream != nil {
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		}
 
 		// Add required auth client headers to request
@@ -71,6 +95,13 @@ func PrometheusRequestHandler(logger *logger.Logger, conf *config.Config, patter
 		for _, h := range headers {
 			req.Header.Add(h.Key, h.Value)
 		}
+
+		l.Debug("forwarding request to upstream prometheus",
+			"url", promUrl,
+			"method", r.Method,
+			"headers", redactedHeaders(req.Header),
+			"body", string(requestBodyBytes),
+		)
 
 		// Make the request to the upstream Prometheus server
 		resp, err := http.DefaultClient.Do(req)
