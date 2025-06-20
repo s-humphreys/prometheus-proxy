@@ -8,9 +8,10 @@ import (
 	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 )
 
-// Implements a health check endpoint that returns a simple JSON response
-func HealthRequestHandler(appLogger *logger.Logger) {
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+// Implements a health check endpoint that returns a simple JSON response.
+// Set simple to true to return a simple 200 response without content
+func HealthRequestHandler(appLogger *logger.Logger, url string, simple bool) {
+	http.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
 		requestID := uuid.New().String()
 		l := appLogger.With(
 			"method", r.Method,
@@ -20,6 +21,7 @@ func HealthRequestHandler(appLogger *logger.Logger) {
 		)
 
 		l.Debug("processing health check request")
+		w.WriteHeader(http.StatusOK)
 
 		if r.Method != http.MethodGet {
 			l.Warn("health check received non-GET request")
@@ -27,9 +29,13 @@ func HealthRequestHandler(appLogger *logger.Logger) {
 			return
 		}
 
+		if simple {
+			l.Debug("request completed", "status_code", http.StatusOK)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-		l.Debug("health check successful")
+		l.Debug("request completed", "status_code", http.StatusOK)
 	})
 }
