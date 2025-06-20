@@ -26,7 +26,9 @@ func Run(c *config.Config) {
 	buildInfo := handlers.NewBuildInfoData()
 
 	// Setup handlers for routes
-	handlers.HealthRequestHandler(l)
+	handlers.HealthRequestHandler(l, "/healthz", false)
+	handlers.HealthRequestHandler(l, "/-/healthy", true)
+	handlers.HealthRequestHandler(l, "/-/ready", true)
 	handlers.MockStatusConfigHandler(l)
 	handlers.MockStatusRuntimeInfoHandler(l, runtimeInfo)
 	handlers.MockStatusBuildInfoHandler(l, buildInfo)
@@ -36,8 +38,11 @@ func Run(c *config.Config) {
 	handlers.PrometheusRequestHandler(l, c, "/api/v1/parse_query")
 	handlers.PrometheusRequestHandler(l, c, "/api/v1/series")
 	handlers.PrometheusRequestHandler(l, c, "/api/v1/labels")
+	handlers.PrometheusRequestHandler(l, c, "/api/v1/label/")
 	handlers.PrometheusRequestHandler(l, c, "/api/v1/metadata")
-	handlers.PrometheusRequestHandler(l, c, "/api/v1/status/flags") // TODO: Implement mock handler like runtimeinfo
+
+	// Catch-all
+	handlers.NotFoundRequestHandler(l)
 
 	addr := fmt.Sprintf(":%d", c.Port)
 	l.Info("starting prometheus proxy", "listening", addr, "port", c.Port)
