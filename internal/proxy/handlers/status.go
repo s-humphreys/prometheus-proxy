@@ -33,24 +33,27 @@ type runtimeInfoData struct {
 	CWD                 string `json:"CWD"`
 	ReloadConfigSuccess bool   `json:"reloadConfigSuccess"`
 	LastConfigTime      string `json:"lastConfigTime"`
+	TimeSeriesCount     int64  `json:"timeSeriesCount"`
 	CorruptionCount     int64  `json:"corruptionCount"`
 	GoroutineCount      int    `json:"goroutineCount"`
 	GOMAXPROCS          int    `json:"GOMAXPROCS"`
-	GOMEMLIMIT          int64  `json:"GOMEMLIMIT"`
 	GOGC                string `json:"GOGC"`
 	GODEBUG             string `json:"GODEBUG"`
 	StorageRetention    string `json:"storageRetention"`
 }
 
 func (r *runtimeInfoData) update() {
-	ts := time.Now().UTC().Format(time.RFC3339Nano)
-	r.StartTime = ts
-	r.LastConfigTime = ts
+	r.LastConfigTime = time.Now().UTC().Format(time.RFC3339Nano)
+	r.GoroutineCount = runtime.NumGoroutine()
 }
 
 func NewBuildInfoData() *buildInfoData {
 	return &buildInfoData{
+		// https://github.com/prometheus/prometheus/releases/tag/v3.4.1
 		Version:   "3.4.1",
+		Revision:  "aea6503d9bbaad6c5faff3ecf6f1025213356c92",
+		Branch:    "main",
+		BuildUser: "prombot@github",
 		GoVersion: runtime.Version(),
 		BuildDate: time.Now().UTC().Format("20060102-15:04:05"),
 	}
@@ -58,15 +61,25 @@ func NewBuildInfoData() *buildInfoData {
 
 func NewRuntimeInfoData() *runtimeInfoData {
 	return &runtimeInfoData{
+		StartTime:           time.Now().UTC().Format(time.RFC3339Nano),
 		CWD:                 "/",
 		ReloadConfigSuccess: true,
+		TimeSeriesCount:     0,
 		CorruptionCount:     0,
 		GoroutineCount:      runtime.NumGoroutine(),
 		GOMAXPROCS:          runtime.GOMAXPROCS(0), // Passing 0 gets current value
-		GOMEMLIMIT:          9223372036854775807,   // Default Go value
 		GOGC:                os.Getenv("GOGC"),
 		GODEBUG:             os.Getenv("GODEBUG"),
-		StorageRetention:    "360h", // Kiali doesn't like an empty string here
+		StorageRetention:    "30d", // Kiali doesn't like an empty string here
+	}
+}
+
+func newConfigResponse() *mockStatusResponse {
+	return &mockStatusResponse{
+		Status: "success",
+		Data: map[string]string{
+			"yaml": "global:\n  scrape_interval: 15s\n",
+		},
 	}
 }
 
@@ -104,13 +117,13 @@ func MockStatusConfigHandler(logger *logger.Logger) {
 			return
 		}
 
+		response := newConfigResponse()
+
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"status": "success",
-			"data": map[string]string{
-				"yaml": "global:\n  scrape_interval: 15s\n",
-			},
-		})
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			l.Error("failed to encode config response", "error", err)
+		}
 
 		l.Info("request completed", "status_code", http.StatusOK)
 	})
