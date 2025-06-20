@@ -21,13 +21,14 @@ func HealthRequestHandler(appLogger *logger.Logger, url string, simple bool) {
 		)
 
 		l.Debug("processing health check request")
-		w.WriteHeader(http.StatusOK)
 
 		if r.Method != http.MethodGet {
 			l.Warn("health check received non-GET request")
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+
+		w.WriteHeader(http.StatusOK)
 
 		if simple {
 			l.Debug("request completed", "status_code", http.StatusOK)
