@@ -12,7 +12,7 @@ import (
 
 // Creates an upstream URL for the Prometheus server based on the request,
 // including the path and query parameters
-func constructPrometheusUrl(logger *logger.Logger, prometheusUrl string, r *http.Request) string {
+func constructPrometheusURL(logger *logger.Logger, prometheusUrl string, r *http.Request) string {
 	upstreamUrl := prometheusUrl + r.URL.Path
 	if r.Method == http.MethodGet && r.URL.RawQuery != "" {
 		upstreamUrl = fmt.Sprintf("%s?%s", upstreamUrl, r.URL.RawQuery)
@@ -47,7 +47,7 @@ func PrometheusRequestHandler(logger *logger.Logger, conf *config.Config, patter
 		l.Info("processing request")
 
 		ctx := r.Context()
-		promUrl := constructPrometheusUrl(l, conf.PrometheusUrl, r)
+		promUrl := constructPrometheusURL(l, conf.PrometheusUrl, r)
 
 		// Copy body if the request method is POST & store for logging/forwarding
 		var bodyForUpstream io.Reader
