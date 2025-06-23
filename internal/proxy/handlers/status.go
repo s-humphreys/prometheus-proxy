@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 )
 
@@ -101,14 +100,7 @@ func newRuntimeInfoResponse(runtimeInfo *runtimeInfoData) *mockStatusResponse {
 // Implements a mock status endpoint that returns the configuration status of the proxy
 func MockStatusConfigHandler(logger *logger.Logger) {
 	http.HandleFunc("/api/v1/status/config", func(w http.ResponseWriter, r *http.Request) {
-		requestId := uuid.New().String()
-		l := logger.With(
-			"method", r.Method,
-			"url", r.URL.String(),
-			"request_id", requestId,
-			"remote_addr", r.RemoteAddr,
-		)
-
+		l := logger.WithRequestFields(r)
 		l.Info("processing request")
 
 		if r.Method != http.MethodGet {
@@ -132,14 +124,7 @@ func MockStatusConfigHandler(logger *logger.Logger) {
 // Implements a mock status endpoint that returns dummy Prometheus runtime information
 func MockStatusRuntimeInfoHandler(logger *logger.Logger, runtimeInfo *runtimeInfoData) {
 	http.HandleFunc("/api/v1/status/runtimeinfo", func(w http.ResponseWriter, r *http.Request) {
-		requestId := uuid.New().String()
-		l := logger.With(
-			"method", r.Method,
-			"url", r.URL.String(),
-			"request_id", requestId,
-			"remote_addr", r.RemoteAddr,
-		)
-
+		l := logger.WithRequestFields(r)
 		l.Info("processing request")
 
 		if r.Method != http.MethodGet {
@@ -163,14 +148,7 @@ func MockStatusRuntimeInfoHandler(logger *logger.Logger, runtimeInfo *runtimeInf
 // Implements a mock status endpoint that returns dummy Prometheus buildtime information
 func MockStatusBuildInfoHandler(logger *logger.Logger, buildInfo *buildInfoData) {
 	http.HandleFunc("/api/v1/status/buildinfo", func(w http.ResponseWriter, r *http.Request) {
-		requestId := uuid.New().String()
-		l := logger.With(
-			"method", r.Method,
-			"url", r.URL.String(),
-			"request_id", requestId,
-			"remote_addr", r.RemoteAddr,
-		)
-
+		l := logger.WithRequestFields(r)
 		l.Info("processing request")
 
 		if r.Method != http.MethodGet {

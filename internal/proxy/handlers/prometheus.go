@@ -4,17 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/s-humphreys/prometheus-proxy/internal/config"
 	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 )
 
 // Creates an upstream URL for the Prometheus server based on the request,
 // including the path and query parameters
-func constructPrometheusUrl(logger *slog.Logger, prometheusUrl string, r *http.Request) string {
+func constructPrometheusUrl(logger *logger.Logger, prometheusUrl string, r *http.Request) string {
 	upstreamUrl := prometheusUrl + r.URL.Path
 	if r.Method == http.MethodGet && r.URL.RawQuery != "" {
 		upstreamUrl = fmt.Sprintf("%s?%s", upstreamUrl, r.URL.RawQuery)
@@ -45,15 +43,9 @@ func PrometheusRequestHandler(logger *logger.Logger, conf *config.Config, patter
 	http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
-		requestId := uuid.New().String()
-		l := logger.With(
-			"method", r.Method,
-			"url", r.URL.String(),
-			"request_id", requestId,
-			"remote_addr", r.RemoteAddr,
-		)
-
+		l := logger.WithRequestFields(r)
 		l.Info("processing request")
+
 		ctx := r.Context()
 		promUrl := constructPrometheusUrl(l, conf.PrometheusUrl, r)
 

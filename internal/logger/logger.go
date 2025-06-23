@@ -3,7 +3,10 @@ package logger
 import (
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -29,4 +32,17 @@ func New(logLevel string) (*Logger, error) {
 	}
 	handler := slog.NewJSONHandler(os.Stdout, opts)
 	return &Logger{slog.New(handler)}, nil
+}
+
+// WithRequestFields creates a new logger instance with a unique request ID
+// and consistent fields useful to trace requests through the system
+func (l *Logger) WithRequestFields(r *http.Request, fields ...any) *Logger {
+	fields = append(fields,
+		"request_id", uuid.New().String(),
+		"method", r.Method,
+		"url", r.URL.String(),
+		"remote_addr", r.RemoteAddr,
+	)
+
+	return &Logger{Logger: l.Logger.With(fields...)}
 }
