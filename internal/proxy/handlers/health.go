@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 )
 
@@ -12,14 +11,7 @@ import (
 // Set simple to true to return a simple 200 response without content
 func HealthRequestHandler(appLogger *logger.Logger, url string, simple bool) {
 	http.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
-		requestID := uuid.New().String()
-		l := appLogger.With(
-			"method", r.Method,
-			"url", r.URL.String(),
-			"request_id", requestID,
-			"remote_addr", r.RemoteAddr,
-		)
-
+		l := appLogger.WithRequestFields(r)
 		l.Debug("processing health check request")
 
 		if r.Method != http.MethodGet {
