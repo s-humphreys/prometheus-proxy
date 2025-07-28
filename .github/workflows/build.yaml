@@ -11,14 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: redhat-actions/buildah-build@v2
-        with:
-          image: prometheus-proxy-test
-          tags: test
-          containerfiles: |
-            ./Containerfile
-          extra-args: |
-            --target test
+      - name: Run Go Tests
+        run: |
+          go test -v ./... > test-results.txt
+          cat test-results.txt
 
   build:
     name: build

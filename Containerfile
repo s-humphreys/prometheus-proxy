@@ -7,10 +7,7 @@ RUN go mod download
 
 COPY . .
 
-FROM base AS test
-RUN go test -v ./...
-
-FROM test AS builder
+FROM base AS builder
 RUN CGO_ENABLED=0 \
     GOOS=linux \
     go build \
