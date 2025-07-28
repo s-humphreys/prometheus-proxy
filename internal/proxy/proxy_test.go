@@ -35,21 +35,25 @@ func (m *MockClient) GetHeaders(ctx context.Context) ([]auth.ClientHeader, error
 }
 
 func TestRun(t *testing.T) {
+	t.Parallel()
 	// Test that Run function exists and can be referenced
 	assert.NotNil(t, Run, "Run function should exist")
 }
 
 func TestRunConfiguration(t *testing.T) {
+	t.Parallel()
 	// Since Run() starts an HTTP server and calls log.Fatalf on errors,
 	// we can't easily test it directly without complex mocking.
 	// Instead, we'll test the components that Run() uses.
 
 	t.Run("logger_creation", func(t *testing.T) {
+		t.Parallel()
 		// Test that logger can be created with different log levels
 		logLevels := []string{"DEBUG", "INFO", "WARN", "ERROR"}
 
 		for _, level := range logLevels {
 			t.Run(level, func(t *testing.T) {
+				t.Parallel()
 				l, err := logger.New(level)
 				require.NoError(t, err)
 				assert.NotNil(t, l)
@@ -58,6 +62,7 @@ func TestRunConfiguration(t *testing.T) {
 	})
 
 	t.Run("config_validation", func(t *testing.T) {
+		t.Parallel()
 		// Store original environment
 		originalEnv := map[string]string{
 			"PROMETHEUS_URL":  os.Getenv("PROMETHEUS_URL"),
@@ -90,9 +95,11 @@ func TestRunConfiguration(t *testing.T) {
 }
 
 func TestRunComponents(t *testing.T) {
+	t.Parallel()
 	// Test the individual components that Run() sets up
 
 	t.Run("client_initialization", func(t *testing.T) {
+		t.Parallel()
 		// Test client initialization with mock
 		l, err := logger.New("ERROR")
 		require.NoError(t, err)
@@ -106,6 +113,7 @@ func TestRunComponents(t *testing.T) {
 	})
 
 	t.Run("client_initialization_with_error", func(t *testing.T) {
+		t.Parallel()
 		// Test client initialization failure
 		l, err := logger.New("ERROR")
 		require.NoError(t, err)
@@ -120,9 +128,11 @@ func TestRunComponents(t *testing.T) {
 }
 
 func TestRunWithMockConfig(t *testing.T) {
+	t.Parallel()
 	// Test Run with a mock configuration (without actually starting the server)
 
 	t.Run("mock_config_creation", func(t *testing.T) {
+		t.Parallel()
 		// Create a mock config that would be valid for Run()
 		mockConfig := &config.Config{
 			PrometheusUrl: "http://test-prometheus:9090",
@@ -146,14 +156,17 @@ func TestRunWithMockConfig(t *testing.T) {
 }
 
 func TestRunServerSetup(t *testing.T) {
+	t.Parallel()
 	// Test the server setup logic without actually starting the server
 
 	t.Run("address_formatting", func(t *testing.T) {
+		t.Parallel()
 		// Test that address formatting works as expected
 		ports := []int{8080, 9090, 3000}
 
 		for _, port := range ports {
 			t.Run(string(rune(port)), func(t *testing.T) {
+				t.Parallel()
 				expectedAddr := ":8080"
 				switch port {
 				case 9090:
@@ -178,9 +191,11 @@ func TestRunServerSetup(t *testing.T) {
 }
 
 func TestRunErrorHandling(t *testing.T) {
+	t.Parallel()
 	// Test error handling scenarios that Run() might encounter
 
 	t.Run("invalid_log_level", func(t *testing.T) {
+		t.Parallel()
 		// Test logger creation with invalid log level
 		_, err := logger.New("INVALID")
 		assert.Error(t, err)
@@ -188,6 +203,7 @@ func TestRunErrorHandling(t *testing.T) {
 	})
 
 	t.Run("client_init_failure", func(t *testing.T) {
+		t.Parallel()
 		// Test client initialization failure
 		l, err := logger.New("ERROR")
 		require.NoError(t, err)
@@ -202,9 +218,11 @@ func TestRunErrorHandling(t *testing.T) {
 }
 
 func TestRunIntegrationPreparation(t *testing.T) {
+	t.Parallel()
 	// Prepare for integration testing without actually running the server
 
 	t.Run("full_config_setup", func(t *testing.T) {
+		t.Parallel()
 		// Store original environment
 		originalEnv := map[string]string{
 			"PROMETHEUS_URL":  os.Getenv("PROMETHEUS_URL"),
@@ -311,6 +329,7 @@ func BenchmarkMockClientOperations(b *testing.B) {
 
 // TestRunTimeout tests that we can set up a timeout for server operations
 func TestRunTimeout(t *testing.T) {
+	t.Parallel()
 	// Test timeout configuration that would be used in Run()
 	timeout := 30 * time.Second
 	assert.Equal(t, 30*time.Second, timeout)

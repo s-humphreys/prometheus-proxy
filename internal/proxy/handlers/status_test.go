@@ -13,6 +13,7 @@ import (
 )
 
 func TestNewBuildInfoData(t *testing.T) {
+	t.Parallel()
 	buildInfo := NewBuildInfoData()
 
 	assert.Equal(t, "3.4.1", buildInfo.Version)
@@ -24,6 +25,7 @@ func TestNewBuildInfoData(t *testing.T) {
 }
 
 func TestNewRuntimeInfoData(t *testing.T) {
+	t.Parallel()
 	runtimeInfo := NewRuntimeInfoData()
 
 	assert.NotEmpty(t, runtimeInfo.StartTime)
@@ -37,6 +39,7 @@ func TestNewRuntimeInfoData(t *testing.T) {
 }
 
 func TestRuntimeInfoData_Update(t *testing.T) {
+	t.Parallel()
 	runtimeInfo := NewRuntimeInfoData()
 	originalLastConfigTime := runtimeInfo.LastConfigTime
 	originalGoroutineCount := runtimeInfo.GoroutineCount
@@ -51,6 +54,7 @@ func TestRuntimeInfoData_Update(t *testing.T) {
 }
 
 func TestMockStatusConfigHandler(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		method         string
@@ -112,6 +116,7 @@ func TestMockStatusConfigHandler(t *testing.T) {
 }
 
 func TestMockStatusBuildInfoHandler(t *testing.T) {
+	t.Parallel()
 	buildInfo := NewBuildInfoData()
 
 	// Create a fresh mux
@@ -155,6 +160,7 @@ func TestMockStatusBuildInfoHandler(t *testing.T) {
 }
 
 func TestMockStatusRuntimeInfoHandler(t *testing.T) {
+	t.Parallel()
 	runtimeInfo := NewRuntimeInfoData()
 
 	// Create a fresh mux

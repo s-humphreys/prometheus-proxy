@@ -11,6 +11,7 @@ import (
 )
 
 func TestCreateTestLogger(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		expectedLevel  string
@@ -25,6 +26,7 @@ func TestCreateTestLogger(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			logger := CreateTestLogger(t)
 
 			if tt.shouldNotBeNil {
@@ -36,6 +38,7 @@ func TestCreateTestLogger(t *testing.T) {
 }
 
 func TestCreateTestLoggerErrorLevel(t *testing.T) {
+	t.Parallel()
 	// Test that the logger is created with ERROR level to reduce noise in tests
 	logger := CreateTestLogger(t)
 	assert.NotNil(t, logger)
@@ -47,6 +50,7 @@ func TestCreateTestLoggerErrorLevel(t *testing.T) {
 }
 
 func TestCreateHTTPRequest(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		method         string
@@ -96,6 +100,7 @@ func TestCreateHTTPRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var bodyReader io.Reader
 			if tt.body != "" {
 				bodyReader = strings.NewReader(tt.body)
@@ -117,6 +122,7 @@ func TestCreateHTTPRequest(t *testing.T) {
 }
 
 func TestCreateHTTPRequestWithNilBody(t *testing.T) {
+	t.Parallel()
 	// Test creating a request with nil body
 	req := CreateHTTPRequest(t, "GET", "http://example.com", nil)
 
@@ -126,6 +132,7 @@ func TestCreateHTTPRequestWithNilBody(t *testing.T) {
 }
 
 func TestCreateHTTPRequestWithQueryParams(t *testing.T) {
+	t.Parallel()
 	// Test creating a request with query parameters
 	url := "http://example.com/api/v1/query?query=up&time=now"
 	req := CreateHTTPRequest(t, "GET", url, nil)
@@ -137,6 +144,7 @@ func TestCreateHTTPRequestWithQueryParams(t *testing.T) {
 }
 
 func TestCreateHTTPRequestEdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		method string
@@ -171,6 +179,7 @@ func TestCreateHTTPRequestEdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var bodyReader io.Reader
 			if tt.body != "" {
 				bodyReader = strings.NewReader(tt.body)
@@ -191,8 +200,10 @@ func TestCreateHTTPRequestEdgeCases(t *testing.T) {
 }
 
 func TestHelperFunctionBehavior(t *testing.T) {
+	t.Parallel()
 	// Test that helper functions properly use t.Helper()
 	t.Run("logger_helper", func(t *testing.T) {
+		t.Parallel()
 		// The CreateTestLogger function should call t.Helper()
 		// We can't directly test this, but we can test that it works correctly
 		logger := CreateTestLogger(t)
@@ -200,6 +211,7 @@ func TestHelperFunctionBehavior(t *testing.T) {
 	})
 
 	t.Run("request_helper", func(t *testing.T) {
+		t.Parallel()
 		// The CreateHTTPRequest function should call t.Helper()
 		// We can't directly test this, but we can test that it works correctly
 		req := CreateHTTPRequest(t, "GET", "http://example.com", nil)
@@ -208,6 +220,7 @@ func TestHelperFunctionBehavior(t *testing.T) {
 }
 
 func TestHelperFunctionsIntegration(t *testing.T) {
+	t.Parallel()
 	// Test using both helper functions together (as they would be used in real tests)
 	logger := CreateTestLogger(t)
 	req := CreateHTTPRequest(t, "POST", "http://prometheus:9090/api/v1/query", strings.NewReader("query=up"))
@@ -227,6 +240,7 @@ func TestHelperFunctionsIntegration(t *testing.T) {
 }
 
 func TestHTTPMethodConstants(t *testing.T) {
+	t.Parallel()
 	// Test various HTTP methods to ensure CreateHTTPRequest handles them correctly
 	methods := []string{
 		http.MethodGet,
@@ -240,6 +254,7 @@ func TestHTTPMethodConstants(t *testing.T) {
 
 	for _, method := range methods {
 		t.Run(method, func(t *testing.T) {
+			t.Parallel()
 			req := CreateHTTPRequest(t, method, "http://example.com", nil)
 			assert.Equal(t, method, req.Method)
 		})
@@ -282,6 +297,7 @@ func BenchmarkCreateHTTPRequestWithBody(b *testing.B) {
 }
 
 func TestCreateHTTPRequestContentType(t *testing.T) {
+	t.Parallel()
 	// Test that we can add headers to requests created by the helper
 	req := CreateHTTPRequest(t, "POST", "http://example.com", strings.NewReader("test=data"))
 
@@ -292,6 +308,7 @@ func TestCreateHTTPRequestContentType(t *testing.T) {
 }
 
 func TestCreateHTTPRequestURL(t *testing.T) {
+	t.Parallel()
 	// Test various URL formats
 	urls := []struct {
 		url      string
@@ -313,6 +330,7 @@ func TestCreateHTTPRequestURL(t *testing.T) {
 
 	for _, test := range urls {
 		t.Run(test.url, func(t *testing.T) {
+			t.Parallel()
 			req := CreateHTTPRequest(t, "GET", test.url, nil)
 			assert.Equal(t, test.expected, req.URL.String())
 		})

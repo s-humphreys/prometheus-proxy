@@ -10,6 +10,7 @@ import (
 )
 
 func TestClientHeader(t *testing.T) {
+	t.Parallel()
 	header := ClientHeader{
 		Key:   "Authorization",
 		Value: "Bearer token123",
@@ -20,12 +21,14 @@ func TestClientHeader(t *testing.T) {
 }
 
 func TestClientInterface(t *testing.T) {
+	t.Parallel()
 	// Test that AzureClient implements the Client interface
 	var client Client = &AzureClient{}
 	assert.NotNil(t, client)
 }
 
 func TestErrorConstants(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		err      error
@@ -56,6 +59,7 @@ func TestErrorConstants(t *testing.T) {
 }
 
 func TestAzureClientStruct(t *testing.T) {
+	t.Parallel()
 	client := &AzureClient{
 		TenantId:     "test-tenant",
 		ClientId:     "test-client",
@@ -71,6 +75,7 @@ func TestAzureClientStruct(t *testing.T) {
 }
 
 func TestValidateClientId(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		clientId string
@@ -107,6 +112,7 @@ func TestValidateClientId(t *testing.T) {
 }
 
 func TestAzureClientGetHeaders_NotInitialized(t *testing.T) {
+	t.Parallel()
 	client := &AzureClient{
 		TenantId: "test-tenant",
 		ClientId: "test-client",
@@ -121,6 +127,7 @@ func TestAzureClientGetHeaders_NotInitialized(t *testing.T) {
 }
 
 func TestAzureClientAcquireToken_NotInitialized(t *testing.T) {
+	t.Parallel()
 	client := &AzureClient{
 		TenantId: "test-tenant",
 		ClientId: "test-client",
@@ -135,6 +142,7 @@ func TestAzureClientAcquireToken_NotInitialized(t *testing.T) {
 }
 
 func TestAzureConstants(t *testing.T) {
+	t.Parallel()
 	// Test that constants are defined as expected
 	assert.Equal(t, []string{"https://prometheus.monitor.azure.com/.default"}, azureScopes)
 	assert.Equal(t, "https://login.microsoftonline.com/", azureTenantPrefix)
@@ -143,6 +151,7 @@ func TestAzureConstants(t *testing.T) {
 
 // Test the InitClient method behavior (without actually initializing Azure clients)
 func TestAzureClientInitClient_InvalidLogger(t *testing.T) {
+	t.Parallel()
 	client := &AzureClient{
 		TenantId: "test-tenant",
 		ClientId: "test-client",
@@ -166,6 +175,7 @@ func TestAzureClientInitClient_InvalidLogger(t *testing.T) {
 
 // Test error cases and edge conditions
 func TestNewConfidentialClient_ErrorHandling(t *testing.T) {
+	t.Parallel()
 	// Create a test logger
 	testLogger, err := logger.New("ERROR")
 	require.NoError(t, err)
@@ -183,6 +193,7 @@ func TestNewConfidentialClient_ErrorHandling(t *testing.T) {
 }
 
 func TestNewWorkloadIdentityCred_ErrorHandling(t *testing.T) {
+	t.Parallel()
 	// Create a test logger
 	testLogger, err := logger.New("ERROR")
 	require.NoError(t, err)
@@ -200,6 +211,7 @@ func TestNewWorkloadIdentityCred_ErrorHandling(t *testing.T) {
 
 // Test refreshClientId with various environment scenarios
 func TestRefreshClientId(t *testing.T) {
+	t.Parallel()
 	// Create a test logger
 	testLogger, err := logger.New("ERROR")
 	require.NoError(t, err)
@@ -231,6 +243,7 @@ func TestRefreshClientId(t *testing.T) {
 
 // Test that GetHeaders returns proper format when token is available
 func TestClientHeader_Format(t *testing.T) {
+	t.Parallel()
 	headers := []ClientHeader{
 		{Key: "Authorization", Value: "Bearer test-token"},
 		{Key: "Content-Type", Value: "application/json"},

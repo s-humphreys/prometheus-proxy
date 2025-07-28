@@ -11,6 +11,7 @@ import (
 )
 
 func TestExecute(t *testing.T) {
+	t.Parallel()
 	// Test that Execute function exists and can be called
 	// We'll test this by checking that rootCmd is properly configured
 	assert.NotNil(t, rootCmd, "rootCmd should be initialized")
@@ -19,6 +20,7 @@ func TestExecute(t *testing.T) {
 }
 
 func TestRootCmd(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		field    string
@@ -49,6 +51,7 @@ func TestRootCmd(t *testing.T) {
 }
 
 func TestRunCmd(t *testing.T) {
+	t.Parallel()
 	// Test that runCmd is properly configured
 	assert.NotNil(t, runCmd, "runCmd should be initialized")
 	assert.Equal(t, "run", runCmd.Use)
@@ -58,6 +61,7 @@ func TestRunCmd(t *testing.T) {
 }
 
 func TestRunCmdIsAddedToRoot(t *testing.T) {
+	t.Parallel()
 	// Test that runCmd is added as a subcommand to rootCmd
 	commands := rootCmd.Commands()
 	found := false
@@ -71,6 +75,7 @@ func TestRunCmdIsAddedToRoot(t *testing.T) {
 }
 
 func TestRunProxy(t *testing.T) {
+	t.Parallel()
 	// Store original environment
 	originalEnv := map[string]string{
 		"PROMETHEUS_URL":  os.Getenv("PROMETHEUS_URL"),
@@ -117,8 +122,10 @@ func TestRunProxy(t *testing.T) {
 }
 
 func TestCommandHelpOutput(t *testing.T) {
+	t.Parallel()
 	// Test that help output is generated correctly
 	t.Run("root_command_help", func(t *testing.T) {
+		t.Parallel()
 		buf := new(bytes.Buffer)
 		rootCmd.SetOut(buf)
 		rootCmd.SetArgs([]string{"--help"})
@@ -134,6 +141,7 @@ func TestCommandHelpOutput(t *testing.T) {
 	})
 
 	t.Run("run_command_help", func(t *testing.T) {
+		t.Parallel()
 		buf := new(bytes.Buffer)
 		rootCmd.SetOut(buf)
 		rootCmd.SetArgs([]string{"run", "--help"})
@@ -149,6 +157,7 @@ func TestCommandHelpOutput(t *testing.T) {
 }
 
 func TestCommandStructure(t *testing.T) {
+	t.Parallel()
 	// Test the overall command structure
 	tests := []struct {
 		name     string
@@ -188,8 +197,10 @@ func TestCommandStructure(t *testing.T) {
 }
 
 func TestCommandExecution(t *testing.T) {
+	t.Parallel()
 	// Test command execution without actually starting the server
 	t.Run("root_command_without_args", func(t *testing.T) {
+		t.Parallel()
 		buf := new(bytes.Buffer)
 		rootCmd.SetOut(buf)
 		rootCmd.SetArgs([]string{})

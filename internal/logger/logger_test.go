@@ -13,6 +13,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		logLevel    string
@@ -68,6 +69,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestWithRequestFields(t *testing.T) {
+	t.Parallel()
 	// Create a logger for testing
 	logger, err := New("INFO")
 	require.NoError(t, err)
@@ -80,7 +82,7 @@ func TestWithRequestFields(t *testing.T) {
 	// Test WithRequestFields without additional fields
 	t.Run("with basic request fields", func(t *testing.T) {
 		requestLogger := logger.WithRequestFields(req)
-		
+
 		assert.NotNil(t, requestLogger)
 		assert.NotNil(t, requestLogger.Logger)
 		assert.NotEqual(t, logger, requestLogger) // Should be a new instance
@@ -89,13 +91,14 @@ func TestWithRequestFields(t *testing.T) {
 	// Test WithRequestFields with additional fields
 	t.Run("with additional fields", func(t *testing.T) {
 		requestLogger := logger.WithRequestFields(req, "custom_field", "custom_value", "another_field", 42)
-		
+
 		assert.NotNil(t, requestLogger)
 		assert.NotNil(t, requestLogger.Logger)
 	})
 }
 
 func TestLogLevelMap(t *testing.T) {
+	t.Parallel()
 	expectedLevels := map[string]slog.Level{
 		"DEBUG": slog.LevelDebug,
 		"INFO":  slog.LevelInfo,
@@ -107,7 +110,7 @@ func TestLogLevelMap(t *testing.T) {
 		t.Run(levelStr, func(t *testing.T) {
 			logger, err := New(levelStr)
 			require.NoError(t, err)
-			
+
 			// We can't directly access the level from the logger, but we can test
 			// that the logger was created successfully
 			assert.NotNil(t, logger)
@@ -117,9 +120,10 @@ func TestLogLevelMap(t *testing.T) {
 
 // TestLoggerOutput tests that the logger actually outputs JSON logs
 func TestLoggerOutput(t *testing.T) {
+	t.Parallel()
 	// Capture log output
 	var buf bytes.Buffer
-	
+
 	// Create a logger with a custom handler that writes to our buffer
 	opts := &slog.HandlerOptions{
 		Level: slog.LevelInfo,
@@ -145,9 +149,10 @@ func TestLoggerOutput(t *testing.T) {
 
 // TestWithRequestFieldsContent tests that WithRequestFields includes the expected fields
 func TestWithRequestFieldsContent(t *testing.T) {
+	t.Parallel()
 	// Capture log output
 	var buf bytes.Buffer
-	
+
 	// Create a logger with a custom handler that writes to our buffer
 	opts := &slog.HandlerOptions{
 		Level: slog.LevelInfo,
@@ -176,7 +181,7 @@ func TestWithRequestFieldsContent(t *testing.T) {
 	assert.Equal(t, "192.168.1.1:12345", logEntry["remote_addr"])
 	assert.NotEmpty(t, logEntry["request_id"])
 	assert.NotEmpty(t, logEntry["time"])
-	
+
 	// Verify request_id is a valid UUID format (basic check)
 	requestID, ok := logEntry["request_id"].(string)
 	assert.True(t, ok)
@@ -185,11 +190,13 @@ func TestWithRequestFieldsContent(t *testing.T) {
 }
 
 func TestLogLevelMapCoverage(t *testing.T) {
+	t.Parallel()
 	// Test that logLevelMap contains all expected levels
 	expectedLevels := []string{"DEBUG", "INFO", "WARN", "ERROR"}
-	
+
 	for _, level := range expectedLevels {
 		t.Run(level, func(t *testing.T) {
+			t.Parallel()
 			_, exists := logLevelMap[level]
 			assert.True(t, exists, "logLevelMap should contain level %s", level)
 		})
@@ -212,7 +219,7 @@ func BenchmarkWithRequestFields(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	
+
 	req, err := http.NewRequest("GET", "http://example.com/test", nil)
 	if err != nil {
 		b.Fatal(err)

@@ -9,6 +9,7 @@ import (
 )
 
 func TestConstructPrometheusURL(t *testing.T) {
+	t.Parallel()
 	logger := testutil.CreateTestLogger(t)
 
 	tests := []struct {
@@ -43,6 +44,7 @@ func TestConstructPrometheusURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			req := testutil.CreateHTTPRequest(t, tt.method, tt.requestURL, nil)
 			result := constructPrometheusURL(logger, tt.prometheusUrl, req)
 			assert.Equal(t, tt.expected, result)
@@ -51,6 +53,7 @@ func TestConstructPrometheusURL(t *testing.T) {
 }
 
 func TestRedactedHeaders(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    http.Header
@@ -93,6 +96,7 @@ func TestRedactedHeaders(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := redactedHeaders(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})

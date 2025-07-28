@@ -8,6 +8,7 @@ import (
 )
 
 func TestMain(t *testing.T) {
+	t.Parallel()
 	// Since main() calls proxy.Execute() which calls cmd.Execute(),
 	// and we don't want to start an actual server in tests,
 	// we'll test that the main function exists and can be called
@@ -19,6 +20,7 @@ func TestMain(t *testing.T) {
 }
 
 func TestMainPackage(t *testing.T) {
+	t.Parallel()
 	// Test that we can import the proxy package
 	// This ensures our imports are correct
 	assert.True(t, true, "main package should compile without errors")
@@ -45,6 +47,7 @@ func TestMainExecution(t *testing.T) {
 */
 
 func TestPackageImports(t *testing.T) {
+	t.Parallel()
 	// Verify that our package imports are accessible
 	// This is a compile-time check that ensures our dependencies are correct
 	tests := []struct {
@@ -67,6 +70,7 @@ func TestPackageImports(t *testing.T) {
 
 // Test environment variable handling that main might depend on
 func TestEnvironmentSetup(t *testing.T) {
+	t.Parallel()
 	// Store original environment
 	originalVars := map[string]string{
 		"PROMETHEUS_URL":      os.Getenv("PROMETHEUS_URL"),

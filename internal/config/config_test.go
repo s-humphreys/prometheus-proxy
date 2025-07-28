@@ -11,6 +11,7 @@ import (
 )
 
 func TestValidateEnvConfig(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		config      *EnvConfig
@@ -100,17 +101,18 @@ func TestValidateEnvConfig(t *testing.T) {
 }
 
 func TestLoadConfig(t *testing.T) {
+	t.Parallel()
 	// Store original environment variables
 	originalEnv := make(map[string]string)
 	envVars := []string{
-		"PROMETHEUS_URL", "AZURE_TENANT_ID", "AZURE_CLIENT_ID", 
+		"PROMETHEUS_URL", "AZURE_TENANT_ID", "AZURE_CLIENT_ID",
 		"AZURE_CLIENT_SECRET", "LOG_LEVEL", "PORT",
 	}
-	
+
 	for _, env := range envVars {
 		originalEnv[env] = os.Getenv(env)
 	}
-	
+
 	// Cleanup function to restore original environment
 	t.Cleanup(func() {
 		for env, value := range originalEnv {
@@ -235,6 +237,7 @@ func TestLoadConfig(t *testing.T) {
 }
 
 func TestPortParsing(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		portEnv      string
@@ -309,7 +312,7 @@ func BenchmarkLoadConfig(b *testing.B) {
 	os.Setenv("PROMETHEUS_URL", "http://test-prometheus:9090")
 	os.Setenv("AZURE_TENANT_ID", "test-tenant-id")
 	os.Setenv("AZURE_CLIENT_ID", "test-client-id")
-	
+
 	defer func() {
 		os.Unsetenv("PROMETHEUS_URL")
 		os.Unsetenv("AZURE_TENANT_ID")

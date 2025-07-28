@@ -10,6 +10,7 @@ import (
 )
 
 func TestNotFoundRequestHandler(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		path           string
@@ -38,6 +39,7 @@ func TestNotFoundRequestHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Create a fresh mux for each test
 			mux := http.NewServeMux()
 
