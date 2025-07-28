@@ -2,19 +2,29 @@ name: build
 
 on:
   push:
-    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+  workflow_dispatch:
 
 jobs:
+  test:
+    name: unit-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Go Tests
+        run: |
+          go test -v ./... > test-results.txt
+          cat test-results.txt
+
   build:
     name: build
+    needs: test
     permissions:
       contents: read
       packages: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: docker/setup-qemu-action@v3
       - uses: redhat-actions/buildah-build@v2
         with:
