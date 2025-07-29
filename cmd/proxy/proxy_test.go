@@ -122,10 +122,10 @@ func TestRunProxy(t *testing.T) {
 }
 
 func TestCommandHelpOutput(t *testing.T) {
-	t.Parallel()
+	// NOTE: No t.Parallel() here because tests share global rootCmd state
 	// Test that help output is generated correctly
 	t.Run("root_command_help", func(t *testing.T) {
-		t.Parallel()
+		// NOTE: No t.Parallel() here because this modifies global rootCmd
 		buf := new(bytes.Buffer)
 		rootCmd.SetOut(buf)
 		rootCmd.SetArgs([]string{"--help"})
@@ -141,7 +141,7 @@ func TestCommandHelpOutput(t *testing.T) {
 	})
 
 	t.Run("run_command_help", func(t *testing.T) {
-		t.Parallel()
+		// NOTE: No t.Parallel() here because this modifies global rootCmd
 		buf := new(bytes.Buffer)
 		rootCmd.SetOut(buf)
 		rootCmd.SetArgs([]string{"run", "--help"})
