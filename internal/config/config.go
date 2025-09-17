@@ -6,7 +6,7 @@ import (
 
 	"github.com/s-humphreys/prometheus-proxy/internal/auth"
 
-	"github.com/caarlos0/env/v10"
+	"github.com/caarlos0/env/v11"
 	"github.com/go-playground/validator"
 )
 
