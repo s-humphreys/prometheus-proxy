@@ -1,4 +1,4 @@
-FROM golang:1.25-bullseye AS base
+FROM golang:1.25-trixie AS base
 
 WORKDIR /src
 
