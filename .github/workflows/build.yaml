@@ -36,7 +36,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: false
           tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
-          outputs: type=docker,dest=/tmp/image.tar
+          outputs: type=oci,dest=/tmp/image.tar
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
         with:
@@ -79,3 +79,5 @@ jobs:
           IMAGE_ID=ghcr.io/${{ github.repository }}:${{ github.sha }}
           for TAG in ${{ steps.meta.outputs.tags }}; do
             docker tag $IMAGE_ID $TAG
+            docker push $TAG
+          done
