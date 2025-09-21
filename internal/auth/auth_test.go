@@ -60,15 +60,17 @@ func TestErrorConstants(t *testing.T) {
 
 func TestAzureClientStruct(t *testing.T) {
 	t.Parallel()
+
+	s := "test-secret"
 	client := &AzureClient{
 		TenantId:     "test-tenant",
 		ClientId:     "test-client",
-		ClientSecret: "test-secret",
+		ClientSecret: &s,
 	}
 
 	assert.Equal(t, "test-tenant", client.TenantId)
 	assert.Equal(t, "test-client", client.ClientId)
-	assert.Equal(t, "test-secret", client.ClientSecret)
+	assert.Equal(t, "test-secret", *client.ClientSecret)
 	assert.Nil(t, client.Logger)
 	assert.Nil(t, client.confClient)
 	assert.Nil(t, client.workloadIdentityCred)
@@ -176,14 +178,16 @@ func TestAzureClientInitClient_InvalidLogger(t *testing.T) {
 // Test error cases and edge conditions
 func TestNewConfidentialClient_ErrorHandling(t *testing.T) {
 	t.Parallel()
+
 	// Create a test logger
+	s := "test-secret"
 	testLogger, err := logger.New("ERROR")
 	require.NoError(t, err)
 
 	client := &AzureClient{
 		TenantId:     "", // Empty tenant ID should cause error
 		ClientId:     "test-client",
-		ClientSecret: "test-secret",
+		ClientSecret: &s,
 		Logger:       testLogger,
 	}
 
@@ -207,38 +211,6 @@ func TestNewWorkloadIdentityCred_ErrorHandling(t *testing.T) {
 	// This should fail due to empty tenant ID
 	_, err = newWorkloadIdentityCred(client)
 	assert.Error(t, err)
-}
-
-// Test refreshClientId with various environment scenarios
-func TestRefreshClientId(t *testing.T) {
-	t.Parallel()
-	// Create a test logger
-	testLogger, err := logger.New("ERROR")
-	require.NoError(t, err)
-
-	client := &AzureClient{
-		TenantId: "test-tenant",
-		ClientId: "original-client-id",
-		Logger:   testLogger,
-	}
-
-	// Store original environment
-	originalClientId := client.ClientId
-
-	// Test refreshing when environment variable is not set
-	err = client.refreshClientId()
-
-	// Should get an error or update the client ID based on environment
-	// The actual behavior depends on the environment
-	if err != nil {
-		assert.Equal(t, errUnsetClientId, err)
-	} else {
-		// If no error, ClientId should be updated from environment
-		// (but we can't predict what the environment variable is)
-	}
-
-	// Restore original client ID
-	client.ClientId = originalClientId
 }
 
 // Test that GetHeaders returns proper format when token is available

@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	logLevelMap = map[string]slog.Level{
+	LogLevelMap = map[string]slog.Level{
 		"DEBUG": slog.LevelDebug,
 		"INFO":  slog.LevelInfo,
 		"WARN":  slog.LevelWarn,
@@ -23,12 +23,12 @@ type Logger struct {
 }
 
 func New(logLevel string) (*Logger, error) {
-	if _, ok := logLevelMap[logLevel]; !ok {
+	if _, ok := LogLevelMap[logLevel]; !ok {
 		return nil, fmt.Errorf("invalid log level: %s", logLevel)
 	}
 
 	opts := &slog.HandlerOptions{
-		Level: logLevelMap[logLevel],
+		Level: LogLevelMap[logLevel],
 	}
 	handler := slog.NewJSONHandler(os.Stdout, opts)
 	return &Logger{slog.New(handler)}, nil

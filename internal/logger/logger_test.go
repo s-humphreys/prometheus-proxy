@@ -197,7 +197,7 @@ func TestLogLevelMapCoverage(t *testing.T) {
 	for _, level := range expectedLevels {
 		t.Run(level, func(t *testing.T) {
 			t.Parallel()
-			_, exists := logLevelMap[level]
+			_, exists := LogLevelMap[level]
 			assert.True(t, exists, "logLevelMap should contain level %s", level)
 		})
 	}
