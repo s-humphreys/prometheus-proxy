@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/s-humphreys/prometheus-proxy/internal/logger"
 
@@ -25,7 +24,7 @@ var (
 type AzureClient struct {
 	TenantId             string
 	ClientId             string
-	ClientSecret         string
+	ClientSecret         *string
 	Logger               *logger.Logger
 	confClient           *confidential.Client
 	workloadIdentityCred *azidentity.WorkloadIdentityCredential
@@ -37,7 +36,7 @@ func (ac *AzureClient) InitClient(logger *logger.Logger) error {
 	ac.Logger = logger
 
 	// Use App Registration auth if client secret is provided
-	if ac.ClientSecret != "" {
+	if ac.ClientSecret != nil {
 		confClient, err := newConfidentialClient(ac)
 		if err != nil {
 			return err
@@ -81,18 +80,6 @@ func (ac *AzureClient) GetHeaders(ctx context.Context) ([]ClientHeader, error) {
 	}, nil
 }
 
-// Updates the Azure Client ID in case Azure does not set the value automatically before first use
-func (ac *AzureClient) refreshClientId() error {
-	clientId := os.Getenv("AZURE_CLIENT_ID")
-	if ok := validateClientId(clientId); !ok {
-		ac.Logger.Error("AZURE_CLIENT_ID environment variable is unset", "client_id", clientId)
-		return errUnsetClientId
-	}
-
-	ac.ClientId = clientId
-	return nil
-}
-
 // Validates the Azure Client ID is set and not empty
 func validateClientId(clientId string) bool {
 	if clientId == "" || clientId == "<no value>" {
@@ -105,7 +92,7 @@ func validateClientId(clientId string) bool {
 // this ensures token acquisition uses cache and refresh tokens
 func newConfidentialClient(client *AzureClient) (*confidential.Client, error) {
 	client.Logger.Debug("creating new confidential client", "client_id", client.ClientId, "tenant_id", client.TenantId)
-	cred, err := confidential.NewCredFromSecret(client.ClientSecret)
+	cred, err := confidential.NewCredFromSecret(*client.ClientSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -125,10 +112,7 @@ func newWorkloadIdentityCred(client *AzureClient) (*azidentity.WorkloadIdentityC
 	client.Logger.Debug("creating new workload identity credential", "client_id", client.ClientId, "tenant_id", client.TenantId)
 
 	if ok := validateClientId(client.ClientId); !ok {
-		err := client.refreshClientId()
-		if err != nil {
-			return nil, err
-		}
+		return nil, errUnsetClientId
 	}
 
 	cred, err := azidentity.NewWorkloadIdentityCredential(&azidentity.WorkloadIdentityCredentialOptions{

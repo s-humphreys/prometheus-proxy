@@ -1,109 +1,120 @@
 package main
 
 import (
-	"os"
+	"bytes"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMain(t *testing.T) {
-	t.Parallel()
-	// Since main() calls proxy.Execute() which calls cmd.Execute(),
-	// and we don't want to start an actual server in tests,
-	// we'll test that the main function exists and can be called
-	// without panicking by testing the main function indirectly.
-
-	// We can test that the main function exists by checking if we can
-	// get a reference to it
-	assert.NotNil(t, main, "main function should exist")
-}
-
-func TestMainPackage(t *testing.T) {
-	t.Parallel()
-	// Test that we can import the proxy package
-	// This ensures our imports are correct
-	assert.True(t, true, "main package should compile without errors")
-}
-
-// Integration test that would run main with specific args
-// This is commented out because it would actually start the server
-/*
-func TestMainExecution(t *testing.T) {
-	// Set required environment variables for testing
-	os.Setenv("PROMETHEUS_URL", "http://test:9090")
-	os.Setenv("AZURE_TENANT_ID", "test")
-	os.Setenv("AZURE_CLIENT_ID", "test")
-
-	defer func() {
-		os.Unsetenv("PROMETHEUS_URL")
-		os.Unsetenv("AZURE_TENANT_ID")
-		os.Unsetenv("AZURE_CLIENT_ID")
-	}()
-
-	// This would actually start the server, so we skip it in normal tests
-	t.Skip("Skipping main execution test to avoid starting server")
-}
-*/
-
-func TestPackageImports(t *testing.T) {
-	t.Parallel()
-	// Verify that our package imports are accessible
-	// This is a compile-time check that ensures our dependencies are correct
-	tests := []struct {
-		name        string
-		description string
-	}{
-		{
-			name:        "proxy_import",
-			description: "should be able to import proxy package",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// If we got here, the imports compiled successfully
-			assert.True(t, true, tt.description)
-		})
-	}
-}
-
-// Test environment variable handling that main might depend on
-func TestEnvironmentSetup(t *testing.T) {
-	t.Parallel()
-	// Store original environment
-	originalVars := map[string]string{
-		"PROMETHEUS_URL":      os.Getenv("PROMETHEUS_URL"),
-		"AZURE_TENANT_ID":     os.Getenv("AZURE_TENANT_ID"),
-		"AZURE_CLIENT_ID":     os.Getenv("AZURE_CLIENT_ID"),
-		"AZURE_CLIENT_SECRET": os.Getenv("AZURE_CLIENT_SECRET"),
-		"LOG_LEVEL":           os.Getenv("LOG_LEVEL"),
-		"PORT":                os.Getenv("PORT"),
-	}
-
-	// Cleanup
+func TestRootCmdFlags(t *testing.T) {
+	var run = func(cmd *cobra.Command, args []string) {}
+	originalRun := run
 	t.Cleanup(func() {
-		for key, value := range originalVars {
-			if value == "" {
-				os.Unsetenv(key)
-			} else {
-				os.Setenv(key, value)
-			}
+		run = originalRun
+	})
+	run = func(_ *cobra.Command, _ []string) {}
+
+	resetCmd := func() {
+		prometheusUrl = ""
+		logLevel = "INFO"
+		port = 9090
+		azureTenantId = ""
+		azureClientId = ""
+		azureClientSecret = nil
+
+		rootCmd = &cobra.Command{
+			Use:     "run",
+			Short:   "Starts the proxy",
+			Long:    `Starts the proxy server that authenticates requests to a Prometheus instance.`,
+			PreRunE: validate,
+			Run:     run,
 		}
+
+		rootCmd.PersistentFlags().StringVar(&prometheusUrl, "prometheus-url", "", "The URL of the Prometheus instance to proxy requests to")
+		rootCmd.MarkPersistentFlagRequired("prometheus-url")
+		rootCmd.PersistentFlags().StringVar(&azureTenantId, "azure-tenant-id", "", "The Azure Tenant ID to use for authentication")
+		rootCmd.MarkPersistentFlagRequired("azure-tenant-id")
+		rootCmd.PersistentFlags().StringVar(&azureClientId, "azure-client-id", "", "The Azure Client ID to use for authentication")
+		rootCmd.MarkPersistentFlagRequired("azure-client-id")
+		azureClientSecret = rootCmd.PersistentFlags().String("azure-client-secret", "", "The Azure Client Secret to use for authentication (if not provided, will use Managed Identity)")
+		rootCmd.PersistentFlags().IntVar(&port, "port", 9090, "The port to run the proxy on")
+		rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "INFO", "The log level to use [DEBUG, INFO]")
+	}
+
+	t.Run("SuccessWithAllFlags", func(t *testing.T) {
+		resetCmd()
+		rootCmd.SetArgs([]string{
+			"--prometheus-url", "http://localhost:9090",
+			"--azure-tenant-id", "tenant123",
+			"--azure-client-id", "client123",
+			"--azure-client-secret", "secret123",
+			"--port", "8080",
+			"--log-level", "DEBUG",
+		})
+
+		err := rootCmd.Execute()
+
+		assert.NoError(t, err)
+		assert.Equal(t, "http://localhost:9090", prometheusUrl)
+		assert.Equal(t, "tenant123", azureTenantId)
+		assert.Equal(t, "client123", azureClientId)
+		assert.NotNil(t, azureClientSecret)
+		assert.Equal(t, "secret123", *azureClientSecret)
+		assert.Equal(t, 8080, port)
+		assert.Equal(t, "DEBUG", logLevel)
 	})
 
-	// Test that environment variables can be set and retrieved
-	testEnvVars := map[string]string{
-		"PROMETHEUS_URL":  "http://test-prometheus:9090",
-		"AZURE_TENANT_ID": "test-tenant",
-		"AZURE_CLIENT_ID": "test-client",
-		"LOG_LEVEL":       "DEBUG",
-		"PORT":            "8080",
-	}
+	t.Run("SuccessWithoutOptionalSecret", func(t *testing.T) {
+		resetCmd()
+		rootCmd.SetArgs([]string{
+			"--prometheus-url", "http://localhost:9090",
+			"--azure-tenant-id", "tenant123",
+			"--azure-client-id", "client123",
+		})
 
-	for key, value := range testEnvVars {
-		os.Setenv(key, value)
-		retrieved := os.Getenv(key)
-		assert.Equal(t, value, retrieved, "Environment variable %s should be set correctly", key)
-	}
+		err := rootCmd.Execute()
+
+		assert.NoError(t, err)
+		assert.Equal(t, "http://localhost:9090", prometheusUrl)
+		assert.Equal(t, "tenant123", azureTenantId)
+		assert.Equal(t, "client123", azureClientId)
+		// The pointer should exist, but point to the default empty string
+		assert.NotNil(t, azureClientSecret)
+		assert.Equal(t, "", *azureClientSecret)
+	})
+
+	t.Run("FailureMissingRequiredFlag", func(t *testing.T) {
+		resetCmd()
+		// Capture output to avoid polluting test logs
+		var out bytes.Buffer
+		rootCmd.SetOut(&out)
+		rootCmd.SetErr(&out)
+
+		rootCmd.SetArgs([]string{
+			"--azure-tenant-id", "tenant123",
+			"--azure-client-id", "client123",
+		})
+
+		err := rootCmd.Execute()
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), `required flag(s) "prometheus-url" not set`)
+	})
+
+	t.Run("FailureInvalidLogLevel", func(t *testing.T) {
+		resetCmd()
+		rootCmd.SetArgs([]string{
+			"--prometheus-url", "http://localhost:9090",
+			"--azure-tenant-id", "tenant123",
+			"--azure-client-id", "client123",
+			"--log-level", "INVALID",
+		})
+
+		err := rootCmd.Execute()
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), `invalid log level "INVALID"`)
+	})
 }

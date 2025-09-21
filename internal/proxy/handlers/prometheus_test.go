@@ -11,6 +11,7 @@ import (
 func TestConstructPrometheusURL(t *testing.T) {
 	t.Parallel()
 	logger := testutil.CreateTestLogger(t)
+	promUrl := "http://prometheus:9090"
 
 	tests := []struct {
 		name          string
@@ -21,21 +22,21 @@ func TestConstructPrometheusURL(t *testing.T) {
 	}{
 		{
 			name:          "GET with query parameters",
-			prometheusUrl: "http://prometheus:9090",
+			prometheusUrl: promUrl,
 			requestURL:    "/api/v1/query?query=up&time=now",
 			method:        "GET",
 			expected:      "http://prometheus:9090/api/v1/query?query=up&time=now",
 		},
 		{
 			name:          "POST without query parameters",
-			prometheusUrl: "http://prometheus:9090",
+			prometheusUrl: promUrl,
 			requestURL:    "/api/v1/query",
 			method:        "POST",
 			expected:      "http://prometheus:9090/api/v1/query",
 		},
 		{
 			name:          "GET without query parameters",
-			prometheusUrl: "http://prometheus:9090",
+			prometheusUrl: promUrl,
 			requestURL:    "/api/v1/labels",
 			method:        "GET",
 			expected:      "http://prometheus:9090/api/v1/labels",

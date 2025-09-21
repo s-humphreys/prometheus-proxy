@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -60,38 +59,6 @@ func TestRunConfiguration(t *testing.T) {
 			})
 		}
 	})
-
-	t.Run("config_validation", func(t *testing.T) {
-		t.Parallel()
-		// Store original environment
-		originalEnv := map[string]string{
-			"PROMETHEUS_URL":  os.Getenv("PROMETHEUS_URL"),
-			"AZURE_TENANT_ID": os.Getenv("AZURE_TENANT_ID"),
-			"AZURE_CLIENT_ID": os.Getenv("AZURE_CLIENT_ID"),
-		}
-
-		// Cleanup
-		t.Cleanup(func() {
-			for key, value := range originalEnv {
-				if value == "" {
-					os.Unsetenv(key)
-				} else {
-					os.Setenv(key, value)
-				}
-			}
-		})
-
-		// Set valid environment for config loading
-		os.Setenv("PROMETHEUS_URL", "http://test-prometheus:9090")
-		os.Setenv("AZURE_TENANT_ID", "test-tenant")
-		os.Setenv("AZURE_CLIENT_ID", "test-client")
-
-		// Test that config can be loaded
-		conf, err := config.LoadConfig()
-		require.NoError(t, err)
-		assert.NotNil(t, conf)
-		assert.NotNil(t, conf.Client)
-	})
 }
 
 func TestRunComponents(t *testing.T) {
@@ -130,7 +97,6 @@ func TestRunComponents(t *testing.T) {
 func TestRunWithMockConfig(t *testing.T) {
 	t.Parallel()
 	// Test Run with a mock configuration (without actually starting the server)
-
 	t.Run("mock_config_creation", func(t *testing.T) {
 		t.Parallel()
 		// Create a mock config that would be valid for Run()
@@ -217,83 +183,7 @@ func TestRunErrorHandling(t *testing.T) {
 	})
 }
 
-func TestRunIntegrationPreparation(t *testing.T) {
-	t.Parallel()
-	// Prepare for integration testing without actually running the server
-
-	t.Run("full_config_setup", func(t *testing.T) {
-		t.Parallel()
-		// Store original environment
-		originalEnv := map[string]string{
-			"PROMETHEUS_URL":  os.Getenv("PROMETHEUS_URL"),
-			"AZURE_TENANT_ID": os.Getenv("AZURE_TENANT_ID"),
-			"AZURE_CLIENT_ID": os.Getenv("AZURE_CLIENT_ID"),
-			"LOG_LEVEL":       os.Getenv("LOG_LEVEL"),
-			"PORT":            os.Getenv("PORT"),
-		}
-
-		// Cleanup
-		t.Cleanup(func() {
-			for key, value := range originalEnv {
-				if value == "" {
-					os.Unsetenv(key)
-				} else {
-					os.Setenv(key, value)
-				}
-			}
-		})
-
-		// Set up complete environment
-		os.Setenv("PROMETHEUS_URL", "http://test-prometheus:9090")
-		os.Setenv("AZURE_TENANT_ID", "test-tenant")
-		os.Setenv("AZURE_CLIENT_ID", "test-client")
-		os.Setenv("LOG_LEVEL", "DEBUG")
-		os.Setenv("PORT", "8080")
-
-		// Test that all components can be set up
-		conf, err := config.LoadConfig()
-		require.NoError(t, err)
-
-		l, err := logger.New(conf.LogLevel)
-		require.NoError(t, err)
-
-		// Test that we can create the components Run() would use
-		assert.NotNil(t, conf)
-		assert.NotNil(t, l)
-		assert.Equal(t, 8080, conf.Port)
-		assert.Equal(t, "DEBUG", conf.LogLevel)
-	})
-}
-
 // Benchmark tests
-func BenchmarkRunComponentCreation(b *testing.B) {
-	// Set up environment for benchmarking
-	os.Setenv("PROMETHEUS_URL", "http://test:9090")
-	os.Setenv("AZURE_TENANT_ID", "test")
-	os.Setenv("AZURE_CLIENT_ID", "test")
-
-	defer func() {
-		os.Unsetenv("PROMETHEUS_URL")
-		os.Unsetenv("AZURE_TENANT_ID")
-		os.Unsetenv("AZURE_CLIENT_ID")
-	}()
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		conf, err := config.LoadConfig()
-		if err != nil {
-			b.Fatal(err)
-		}
-
-		l, err := logger.New(conf.LogLevel)
-		if err != nil {
-			b.Fatal(err)
-		}
-
-		_ = conf
-		_ = l
-	}
-}
 
 func BenchmarkMockClientOperations(b *testing.B) {
 	mockClient := &MockClient{

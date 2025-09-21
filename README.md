@@ -16,15 +16,24 @@ endpoint and returns the raw Prometheus response to the original caller.
 
 ## Deployment
 
-### Configuration
+Currently the only supported authentication methods is [Azure](#azure), which handles requests
+to Azure Managed Prometheus. Ensure you fulfil the pre-requisites.
 
-The following environment variables are required to be set prior to running the service:
-- `PROMETHEUS_URL` (required) - The URL for the Prometheus instance which requires proxying to.
-- `LOG_LEVEL` (optional) - The logging level. One of `INFO`/`DEBUG`/`ERROR`/`WARN`.
+### Usage
 
-In addition to the above, configuration for one of the supported authentication methods must
-also be in place:
-- [Azure](#azure)
+```sh
+Usage:
+  run [flags]
+
+Flags:
+      --azure-client-id string       The Azure Client ID to use for authentication
+      --azure-client-secret string   The Azure Client Secret to use for authentication (if not provided, will use Managed Identity)
+      --azure-tenant-id string       The Azure Tenant ID to use for authentication
+  -h, --help                         help for run
+      --log-level string             The log level to use (default "INFO")
+      --port int                     The port to run the proxy on (default 9090)
+      --prometheus-url string        The URL of the Prometheus instance to proxy requests to
+```
 
 ### Azure
 
@@ -40,11 +49,10 @@ Reader` role assigned to the Azure Monitor Workspace, or the subscription it res
 
 ##### App Registration
 
-If using an App Registration, you must set the following environment variables prior to
-running the service:
-- `AZURE_TENANT_ID` (required) - the Azure tenant ID.
-- `AZURE_CLIENT_ID` (required) - the client ID of the App Registration.
-- `AZURE_CLIENT_SECRET` (required) - the client secret of the App Registration.
+If using an App Registration, you must set the following args must be set prior whilst running the service:
+- `--azure-tenant-id` (required) - the Azure tenant ID.
+- `--azure-client-id` (required) - the client ID of the App Registration.
+- `--azure-client-secret` (required) - the client secret of the App Registration.
 
 ##### User-Assigned Managed Identity (workload identity)
 
@@ -52,5 +60,7 @@ If using a User-Assigned Managed Identity, you must ensure the application is ru
 Kubernetes service account bound to the Managed Identity and a valid Federated Credential is in
 place. The service will use the auto-mounted credentials which AKS adds to the Pod.
 
-The following environment variables must be set prior to running the service:
-- `AZURE_TENANT_ID` (required) - the Azure tenant ID.
+The following args must be set whilst running the service:
+- `--azure-tenant-id` (required) - the Azure tenant ID.
+- `--azure-client-id` (required) - the client ID of the App Registration. You can
+use the auto-injected AKS environment variable to set this arg, like `--azure-client-id=$(AZURE_CLIENT_ID)`.
