@@ -15,7 +15,7 @@ RUN CGO_ENABLED=0 \
     -o /prometheus-proxy \
     ./cmd/main.go
 
-FROM gcr.io/distroless/static-debian11
+FROM gcr.io/distroless/static-debian12
 
 COPY --from=builder /prometheus-proxy /prometheus-proxy
 
