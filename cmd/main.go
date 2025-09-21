@@ -18,7 +18,7 @@ var (
 	prometheusUrl     string
 	logLevel          string
 	port              int
-	azureTeneantId    string
+	azureTenantId     string
 	azureClientId     string
 	azureClientSecret *string
 )
@@ -34,7 +34,7 @@ func main() {
 
 	rootCmd.PersistentFlags().StringVar(&prometheusUrl, "prometheus-url", "", "The URL of the Prometheus instance to proxy requests to")
 	rootCmd.MarkPersistentFlagRequired("prometheus-url")
-	rootCmd.PersistentFlags().StringVar(&azureTeneantId, "azure-tenant-id", "", "The Azure Tenant ID to use for authentication")
+	rootCmd.PersistentFlags().StringVar(&azureTenantId, "azure-tenant-id", "", "The Azure Tenant ID to use for authentication")
 	rootCmd.MarkPersistentFlagRequired("azure-tenant-id")
 	rootCmd.PersistentFlags().StringVar(&azureClientId, "azure-client-id", "", "The Azure Client ID to use for authentication")
 	rootCmd.MarkPersistentFlagRequired("azure-client-id")
@@ -66,7 +66,7 @@ func run(_ *cobra.Command, _ []string) {
 		LogLevel:      logLevel,
 		Port:          port,
 		Client: &auth.AzureClient{
-			TenantId:     azureTeneantId,
+			TenantId:     azureTenantId,
 			ClientId:     azureClientId,
 			ClientSecret: secret,
 		},

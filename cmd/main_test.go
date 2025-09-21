@@ -20,7 +20,7 @@ func TestRootCmdFlags(t *testing.T) {
 		prometheusUrl = ""
 		logLevel = "INFO"
 		port = 9090
-		azureTeneantId = ""
+		azureTenantId = ""
 		azureClientId = ""
 		azureClientSecret = nil
 
@@ -34,7 +34,7 @@ func TestRootCmdFlags(t *testing.T) {
 
 		rootCmd.PersistentFlags().StringVar(&prometheusUrl, "prometheus-url", "", "The URL of the Prometheus instance to proxy requests to")
 		rootCmd.MarkPersistentFlagRequired("prometheus-url")
-		rootCmd.PersistentFlags().StringVar(&azureTeneantId, "azure-tenant-id", "", "The Azure Tenant ID to use for authentication")
+		rootCmd.PersistentFlags().StringVar(&azureTenantId, "azure-tenant-id", "", "The Azure Tenant ID to use for authentication")
 		rootCmd.MarkPersistentFlagRequired("azure-tenant-id")
 		rootCmd.PersistentFlags().StringVar(&azureClientId, "azure-client-id", "", "The Azure Client ID to use for authentication")
 		rootCmd.MarkPersistentFlagRequired("azure-client-id")
@@ -58,7 +58,7 @@ func TestRootCmdFlags(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, "http://localhost:9090", prometheusUrl)
-		assert.Equal(t, "tenant123", azureTeneantId)
+		assert.Equal(t, "tenant123", azureTenantId)
 		assert.Equal(t, "client123", azureClientId)
 		assert.NotNil(t, azureClientSecret)
 		assert.Equal(t, "secret123", *azureClientSecret)
@@ -78,7 +78,7 @@ func TestRootCmdFlags(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, "http://localhost:9090", prometheusUrl)
-		assert.Equal(t, "tenant123", azureTeneantId)
+		assert.Equal(t, "tenant123", azureTenantId)
 		assert.Equal(t, "client123", azureClientId)
 		// The pointer should exist, but point to the default empty string
 		assert.NotNil(t, azureClientSecret)
