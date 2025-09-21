@@ -40,7 +40,7 @@ func main() {
 	rootCmd.MarkPersistentFlagRequired("azure-client-id")
 	azureClientSecret = rootCmd.PersistentFlags().String("azure-client-secret", "", "The Azure Client Secret to use for authentication (if not provided, will use Managed Identity)")
 	rootCmd.PersistentFlags().IntVar(&port, "port", 9090, "The port to run the proxy on")
-	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "INFO", "The log level to use@")
+	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "INFO", "The log level to use")
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err.Error())
