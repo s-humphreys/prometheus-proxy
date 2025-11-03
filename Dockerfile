@@ -20,3 +20,4 @@ FROM gcr.io/distroless/static-debian12
 COPY --from=builder /prometheus-proxy /prometheus-proxy
 
 ENTRYPOINT ["/prometheus-proxy", "run"]
+# test
