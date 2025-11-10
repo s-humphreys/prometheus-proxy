@@ -3,7 +3,7 @@ module github.com/s-humphreys/prometheus-proxy
 go 1.25
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.19.1
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.0
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.5.0
 	github.com/google/uuid v1.6.0
