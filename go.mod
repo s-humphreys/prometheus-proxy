@@ -5,7 +5,7 @@ go 1.26
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.14.0
-	github.com/AzureAD/microsoft-authentication-library-for-go v1.8.0
+	github.com/AzureAD/microsoft-authentication-library-for-go v1.9.0
 	github.com/google/uuid v1.6.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
