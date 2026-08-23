@@ -1,4 +1,4 @@
-FROM golang:1.26-trixie AS base
+FROM golang:1.27-trixie AS base
 
 WORKDIR /src
 

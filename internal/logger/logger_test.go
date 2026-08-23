@@ -135,7 +135,7 @@ func TestLoggerOutput(t *testing.T) {
 	testLogger.Info("test message", "key1", "value1", "key2", 42)
 
 	// Parse the JSON output
-	var logEntry map[string]interface{}
+	var logEntry map[string]any
 	err := json.Unmarshal(buf.Bytes(), &logEntry)
 	require.NoError(t, err)
 
@@ -170,7 +170,7 @@ func TestWithRequestFieldsContent(t *testing.T) {
 	requestLogger.Info("test message")
 
 	// Parse the JSON output
-	var logEntry map[string]interface{}
+	var logEntry map[string]any
 	err = json.Unmarshal(buf.Bytes(), &logEntry)
 	require.NoError(t, err)
 

@@ -81,7 +81,7 @@ func TestHealthRequestHandler(t *testing.T) {
 			// Assert body for specific cases
 			if tt.expectedBody != "" && tt.hasContentType {
 				// For JSON responses, parse and compare
-				var expected, actual map[string]interface{}
+				var expected, actual map[string]any
 				err := json.Unmarshal([]byte(tt.expectedBody), &expected)
 				assert.NoError(t, err)
 				err = json.Unmarshal(recorder.Body.Bytes(), &actual)
