@@ -1,6 +1,6 @@
 module github.com/s-humphreys/prometheus-proxy
 
-go 1.26
+go 1.27
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0

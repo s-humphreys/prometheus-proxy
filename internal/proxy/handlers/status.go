@@ -14,8 +14,8 @@ import (
 var errForbiddenMethod = errors.New("forbidden request method")
 
 type mockStatusResponse struct {
-	Status string      `json:"status"`
-	Data   interface{} `json:"data"`
+	Status string `json:"status"`
+	Data   any    `json:"data"`
 }
 
 type buildInfoData struct {

@@ -152,8 +152,8 @@ func TestMockStatusBuildInfoHandler(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "success", response.Status)
 
-	// Check build info data - response.Data is an interface{} that contains a map
-	dataMap, ok := response.Data.(map[string]interface{})
+	// Check build info data - response.Data is an any that contains a map
+	dataMap, ok := response.Data.(map[string]any)
 	require.True(t, ok)
 	assert.Equal(t, "3.4.1", dataMap["version"])
 	assert.Equal(t, runtime.Version(), dataMap["goVersion"])
