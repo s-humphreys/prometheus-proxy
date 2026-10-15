@@ -5,6 +5,7 @@ import (
 	"log"
 	"maps"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/s-humphreys/prometheus-proxy/internal/auth"
@@ -54,6 +55,19 @@ func main() {
 func validate(_ *cobra.Command, _ []string) error {
 	if _, exists := logger.LogLevelMap[logLevel]; !exists {
 		return fmt.Errorf("invalid log level %q, allowed values are: %v", logLevel, maps.Keys(logger.LogLevelMap))
+	}
+	// A duplicate would be queried twice and return every series twice. A trailing
+	// "/" is ignored as it reaches the same instance
+	seen := map[string]struct{}{}
+	for _, u := range prometheusUrls {
+		key := strings.TrimRight(strings.TrimSpace(u), "/")
+		if key == "" {
+			return fmt.Errorf("invalid prometheus url %q, it must not be empty", u)
+		}
+		if _, ok := seen[key]; ok {
+			return fmt.Errorf("duplicate prometheus url %q", u)
+		}
+		seen[key] = struct{}{}
 	}
 	if upstreamTimeout <= 0 {
 		return fmt.Errorf("invalid upstream timeout %s, it must be greater than zero", upstreamTimeout)

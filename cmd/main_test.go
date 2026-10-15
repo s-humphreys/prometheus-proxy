@@ -131,6 +131,39 @@ func TestRootCmdFlags(t *testing.T) {
 		assert.Contains(t, err.Error(), "invalid upstream timeout")
 	})
 
+	t.Run("FailureDuplicatePrometheusUrl", func(t *testing.T) {
+		for _, urls := range []string{
+			"http://a:9090,http://a:9090",
+			"http://a:9090,http://a:9090/",
+		} {
+			resetCmd()
+			rootCmd.SetArgs([]string{
+				"--prometheus-url", urls,
+				"--azure-tenant-id", "tenant123",
+				"--azure-client-id", "client123",
+			})
+
+			err := rootCmd.Execute()
+
+			assert.Error(t, err, urls)
+			assert.Contains(t, err.Error(), "duplicate prometheus url", urls)
+		}
+	})
+
+	t.Run("FailureEmptyPrometheusUrl", func(t *testing.T) {
+		resetCmd()
+		rootCmd.SetArgs([]string{
+			"--prometheus-url", "http://a:9090,",
+			"--azure-tenant-id", "tenant123",
+			"--azure-client-id", "client123",
+		})
+
+		err := rootCmd.Execute()
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "must not be empty")
+	})
+
 	t.Run("FailureMissingRequiredFlag", func(t *testing.T) {
 		resetCmd()
 		// Capture output to avoid polluting test logs
