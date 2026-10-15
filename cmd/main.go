@@ -5,6 +5,8 @@ import (
 	"log"
 	"maps"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/s-humphreys/prometheus-proxy/internal/auth"
 	"github.com/s-humphreys/prometheus-proxy/internal/config"
@@ -15,9 +17,10 @@ import (
 
 var (
 	rootCmd           *cobra.Command
-	prometheusUrl     string
+	prometheusUrls    []string
 	logLevel          string
 	port              int
+	upstreamTimeout   time.Duration
 	azureTenantId     string
 	azureClientId     string
 	azureClientSecret *string
@@ -32,7 +35,7 @@ func main() {
 		Run:     run,
 	}
 
-	rootCmd.PersistentFlags().StringVar(&prometheusUrl, "prometheus-url", "", "The URL of the Prometheus instance to proxy requests to")
+	rootCmd.PersistentFlags().StringSliceVar(&prometheusUrls, "prometheus-url", nil, "The URL of the Prometheus instance to proxy requests to, repeat or comma-separate to aggregate several instances")
 	rootCmd.MarkPersistentFlagRequired("prometheus-url")
 	rootCmd.PersistentFlags().StringVar(&azureTenantId, "azure-tenant-id", "", "The Azure Tenant ID to use for authentication")
 	rootCmd.MarkPersistentFlagRequired("azure-tenant-id")
@@ -40,6 +43,7 @@ func main() {
 	rootCmd.MarkPersistentFlagRequired("azure-client-id")
 	azureClientSecret = rootCmd.PersistentFlags().String("azure-client-secret", "", "The Azure Client Secret to use for authentication (if not provided, will use Managed Identity)")
 	rootCmd.PersistentFlags().IntVar(&port, "port", 9090, "The port to run the proxy on")
+	rootCmd.PersistentFlags().DurationVar(&upstreamTimeout, "upstream-timeout", config.DefaultUpstreamTimeout, "How long each Prometheus instance has to respond when several are configured")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "INFO", "The log level to use")
 
 	if err := rootCmd.Execute(); err != nil {
@@ -52,6 +56,22 @@ func validate(_ *cobra.Command, _ []string) error {
 	if _, exists := logger.LogLevelMap[logLevel]; !exists {
 		return fmt.Errorf("invalid log level %q, allowed values are: %v", logLevel, maps.Keys(logger.LogLevelMap))
 	}
+	// A duplicate would be queried twice and return every series twice. A trailing
+	// "/" is ignored as it reaches the same instance
+	seen := map[string]struct{}{}
+	for _, u := range prometheusUrls {
+		key := strings.TrimRight(strings.TrimSpace(u), "/")
+		if key == "" {
+			return fmt.Errorf("invalid prometheus url %q, it must not be empty", u)
+		}
+		if _, ok := seen[key]; ok {
+			return fmt.Errorf("duplicate prometheus url %q", u)
+		}
+		seen[key] = struct{}{}
+	}
+	if upstreamTimeout <= 0 {
+		return fmt.Errorf("invalid upstream timeout %s, it must be greater than zero", upstreamTimeout)
+	}
 	return nil
 }
 
@@ -62,9 +82,10 @@ func run(_ *cobra.Command, _ []string) {
 	}
 
 	conf := &config.Config{
-		PrometheusUrl: prometheusUrl,
-		LogLevel:      logLevel,
-		Port:          port,
+		PrometheusUrls:  prometheusUrls,
+		LogLevel:        logLevel,
+		Port:            port,
+		UpstreamTimeout: upstreamTimeout,
 		Client: &auth.AzureClient{
 			TenantId:     azureTenantId,
 			ClientId:     azureClientId,

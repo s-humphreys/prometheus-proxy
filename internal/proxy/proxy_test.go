@@ -101,9 +101,9 @@ func TestRunWithMockConfig(t *testing.T) {
 		t.Parallel()
 		// Create a mock config that would be valid for Run()
 		mockConfig := &config.Config{
-			PrometheusUrl: "http://test-prometheus:9090",
-			LogLevel:      "INFO",
-			Port:          9090,
+			PrometheusUrls: []string{"http://test-prometheus:9090"},
+			LogLevel:       "INFO",
+			Port:           9090,
 			Client: &MockClient{
 				initError: nil,
 				token:     "mock-token",
@@ -114,7 +114,7 @@ func TestRunWithMockConfig(t *testing.T) {
 		}
 
 		// Verify mock config is properly structured
-		assert.Equal(t, "http://test-prometheus:9090", mockConfig.PrometheusUrl)
+		assert.Equal(t, []string{"http://test-prometheus:9090"}, mockConfig.PrometheusUrls)
 		assert.Equal(t, "INFO", mockConfig.LogLevel)
 		assert.Equal(t, 9090, mockConfig.Port)
 		assert.NotNil(t, mockConfig.Client)

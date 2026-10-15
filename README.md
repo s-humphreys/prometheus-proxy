@@ -32,8 +32,27 @@ Flags:
   -h, --help                         help for run
       --log-level string             The log level to use (default "INFO")
       --port int                     The port to run the proxy on (default 9090)
-      --prometheus-url string        The URL of the Prometheus instance to proxy requests to
+      --prometheus-url strings       The URL of the Prometheus instance to proxy requests to, repeat or comma-separate to aggregate several instances
+      --upstream-timeout duration    How long each Prometheus instance has to respond when several are configured (default 1m0s)
 ```
+
+### Multiple Prometheus instances
+
+Repeat `--prometheus-url` (or comma-separate the values) to serve several instances, such as
+one Azure Monitor workspace per cluster, from a single proxy. With one URL, responses are
+passed through unchanged.
+
+With several URLs, queries, labels, series and metadata requests go to every instance using
+the same credentials, and the results are combined: query results are concatenated in URL
+order, and the other endpoints return a de-duplicated union. Every other endpoint goes to the
+first instance only.
+
+Aggregations such as `sum(...)` run per instance and are not re-aggregated, so filter or
+group by a label that identifies the instance, such as `cluster`.
+
+If an instance fails or does not respond within `--upstream-timeout`, the response still
+succeeds with a `warnings` entry for it. Warnings returned by instances that succeeded are
+passed on too. If all of them fail, the first error is returned, or `502` if none responded.
 
 ### Azure
 

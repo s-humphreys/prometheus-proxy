@@ -42,15 +42,14 @@ func TestRuntimeInfoData_Update(t *testing.T) {
 	t.Parallel()
 	runtimeInfo := NewRuntimeInfoData()
 	originalLastConfigTime := runtimeInfo.LastConfigTime
-	originalGoroutineCount := runtimeInfo.GoroutineCount
 
 	// Wait a tiny bit to ensure time difference
 	runtimeInfo.update()
 
 	// LastConfigTime should be updated
 	assert.NotEqual(t, originalLastConfigTime, runtimeInfo.LastConfigTime)
-	// GoroutineCount might be different
-	assert.GreaterOrEqual(t, runtimeInfo.GoroutineCount, originalGoroutineCount)
+	// The count changes as other tests run in parallel, so only check it is reported
+	assert.Positive(t, runtimeInfo.GoroutineCount)
 }
 
 func TestMockStatusConfigHandler(t *testing.T) {
